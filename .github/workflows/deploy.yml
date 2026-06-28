@@ -1,0 +1,95 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Required GitHub configuration
+# -----------------------------------------------------------------------------
+# Repository VARIABLES (Settings > Secrets and variables > Actions > Variables):
+#   GCP_PROJECT_ID         e.g. my-project
+#   GCP_REGION             e.g. europe-west1
+#   CLOUD_RUN_SERVICE      e.g. boutique
+#   ARTIFACT_REPO          e.g. boutique (Artifact Registry repo name)
+#   CLOUDSQL_INSTANCE      e.g. my-project:europe-west1:boutique-db
+#   RUNTIME_SERVICE_ACCOUNT  e.g. boutique-run@my-project.iam.gserviceaccount.com
+#   NEXT_PUBLIC_SITE_URL   e.g. https://shop.example.com
+#   NEXT_PUBLIC_GA_MEASUREMENT_ID
+#   NEXT_PUBLIC_GCS_PUBLIC_BASE
+#   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+#
+# Repository SECRETS:
+#   GCP_SA_KEY             JSON key of a deploy service account (or use WIF)
+#   MIGRATIONS_DATABASE_URL  postgresql://USER:PASS@127.0.0.1:5432/DB  (via proxy)
+#
+# Secret Manager secrets referenced by the running service (create these in GCP):
+#   DATABASE_URL, AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET,
+#   AUTH_FACEBOOK_ID, AUTH_FACEBOOK_SECRET, STRIPE_SECRET_KEY,
+#   STRIPE_WEBHOOK_SECRET, RESEND_API_KEY
+# -----------------------------------------------------------------------------
+
+env:
+  IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/${{ vars.CLOUD_RUN_SERVICE }}:${{ github.sha }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_SITE_URL="${{ vars.NEXT_PUBLIC_SITE_URL }}" \
+            --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ vars.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}" \
+            --build-arg NEXT_PUBLIC_GA_MEASUREMENT_ID="${{ vars.NEXT_PUBLIC_GA_MEASUREMENT_ID }}" \
+            --build-arg NEXT_PUBLIC_GCS_PUBLIC_BASE="${{ vars.NEXT_PUBLIC_GCS_PUBLIC_BASE }}" \
+            -t "$IMAGE" .
+
+      - name: Push image
+        run: docker push "$IMAGE"
+
+      - name: Run database migrations (via Cloud SQL Auth Proxy)
+        env:
+          DATABASE_URL: ${{ secrets.MIGRATIONS_DATABASE_URL }}
+        run: |
+          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.1/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          ./cloud-sql-proxy --port 5432 "${{ vars.CLOUDSQL_INSTANCE }}" &
+          PROXY_PID=$!
+          # Wait for the proxy to accept connections.
+          for i in $(seq 1 30); do
+            (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1 && break
+            sleep 1
+          done
+          npm ci --ignore-scripts
+          npx prisma migrate deploy
+          kill $PROXY_PID || true
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "${{ vars.CLOUD_RUN_SERVICE }}" \
+            --image "$IMAGE" \
+            --project "${{ vars.GCP_PROJECT_ID }}" \
+            --region "${{ vars.GCP_REGION }}" \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account "${{ vars.RUNTIME_SERVICE_ACCOUNT }}" \
+            --port 8080 \
+            --add-cloudsql-instances "${{ vars.CLOUDSQL_INSTANCE }}" \
+            --set-env-vars "AUTH_TRUST_HOST=true,NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL }},NEXT_PUBLIC_GCS_PUBLIC_BASE=${{ vars.NEXT_PUBLIC_GCS_PUBLIC_BASE }},GCS_BUCKET=${{ vars.GCS_BUCKET }},GCS_PROJECT_ID=${{ vars.GCP_PROJECT_ID }},RESEND_FROM_EMAIL=${{ vars.RESEND_FROM_EMAIL }},RESEND_AUDIENCE_ID=${{ vars.RESEND_AUDIENCE_ID }}" \
+            --set-secrets "DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,AUTH_GOOGLE_ID=AUTH_GOOGLE_ID:latest,AUTH_GOOGLE_SECRET=AUTH_GOOGLE_SECRET:latest,AUTH_FACEBOOK_ID=AUTH_FACEBOOK_ID:latest,AUTH_FACEBOOK_SECRET=AUTH_FACEBOOK_SECRET:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,STRIPE_WEBHOOK_SECRET=STRIPE_WEBHOOK_SECRET:latest,RESEND_API_KEY=RESEND_API_KEY:latest"
