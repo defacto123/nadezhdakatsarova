@@ -1,4 +1,5 @@
 name: Seed production database
+# Manual workflow_dispatch. (Re-saved so GitHub registers the dispatch trigger.)
 
 # Manually-triggered, idempotent seed of the production database via the
 # Cloud SQL Auth Proxy. The seed only creates missing rows (products are
