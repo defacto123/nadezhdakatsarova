@@ -5,6 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Whether an image URL should bypass Next.js optimization. Data URLs and GIFs
+ * must be served raw so animated GIFs keep animating.
+ */
+export function isRawImage(url?: string | null): boolean {
+  if (!url) return false;
+  return url.startsWith("data:") || /\.gif(\?|$)/i.test(url);
+}
+
 export function slugify(input: string): string {
   const map: Record<string, string> = {
     а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ж: "zh", з: "z",

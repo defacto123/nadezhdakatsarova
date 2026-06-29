@@ -15,7 +15,7 @@ export function AnnouncementBar({ text }: { text: string }) {
   ));
 
   return (
-    <div className="relative overflow-hidden bg-[var(--color-accent)] py-2 text-[11px] uppercase tracking-[0.2em] text-ink">
+    <div className="relative overflow-hidden bg-blush py-2 text-[11px] uppercase tracking-[0.2em] text-ink">
       <div className="flex w-max animate-marquee whitespace-nowrap">
         <div className="flex">{items}</div>
         <div className="flex" aria-hidden>

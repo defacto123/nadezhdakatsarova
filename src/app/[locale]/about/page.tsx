@@ -50,7 +50,7 @@ export default async function AboutPage({
               />
             </div>
           ) : (
-            <div className="aspect-[5/6] rounded-3xl bg-gradient-to-br from-[var(--color-accent)] via-[var(--color-surface)] to-[var(--color-background)]" />
+            <div className="aspect-[5/6] rounded-3xl bg-gradient-to-br from-blush via-sand to-cream" />
           )}
         </div>
       </div>

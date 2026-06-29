@@ -8,4 +8,7 @@ export const routing = defineRouting({
   locales,
   defaultLocale,
   localePrefix: "as-needed",
+  // Always serve Bulgarian by default; do not auto-switch based on the
+  // visitor's browser language. English remains available at /en.
+  localeDetection: false,
 });

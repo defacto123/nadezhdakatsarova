@@ -90,6 +90,7 @@ export default async function LocaleLayout({
         }))}
         brand={{ line1: brandLine1, line2: brandLine2 }}
         logo={logo}
+        brushUrl={images["header-brush"]?.url ?? "/brand/header-brush.png"}
       />
       <main className="flex-1">{children}</main>
       <Footer

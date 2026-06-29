@@ -304,10 +304,13 @@ async function main() {
     label?: string;
   }[] = [
     { slot: "logo", w: 480, h: 140, seed: 1, label: "Nadezhda" },
-    { slot: "hero", w: 1600, h: 900, seed: 2 },
+    { slot: "home-hero-art", w: 900, h: 1100, seed: 2, label: "hello" },
+    { slot: "home-hero-brush", w: 700, h: 260, seed: 6 },
+    { slot: "home-side-1", w: 700, h: 900, seed: 7 },
+    { slot: "home-side-2", w: 700, h: 900, seed: 8 },
+    { slot: "home-side-3", w: 700, h: 900, seed: 9 },
     { slot: "about-portrait", w: 1000, h: 1200, seed: 3 },
     { slot: "og-share", w: 1200, h: 630, seed: 4 },
-    { slot: "collection", w: 1600, h: 900, seed: 5 },
   ];
   for (const s of slotImages) {
     const url = placeholder(s.w, s.h, s.seed, s.label);

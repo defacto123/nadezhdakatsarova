@@ -37,16 +37,38 @@ function Logotype({ logo, brand }: { logo: Logo; brand: Brand }) {
   );
 }
 
+function HeaderBrush({ brushUrl }: { brushUrl: string | null }) {
+  if (!brushUrl) return null;
+  // Full-width wavy stroke. The band is taller than the header and is NOT
+  // clipped, so the complete ribbon — both wavy edges — is visible and its
+  // lower wavy edge spills below the header onto the hero, exactly like the
+  // reference site. Kept light via opacity so the menu text stays readable.
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[85px] opacity-75"
+      style={{
+        backgroundImage: `url(${brushUrl})`,
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "100% 170px",
+        backgroundPosition: "center bottom",
+      }}
+    />
+  );
+}
+
 export function Header({
   locale,
   categories,
   brand,
   logo,
+  brushUrl = null,
 }: {
   locale: string;
   categories: Cat[];
   brand: Brand;
   logo: Logo;
+  brushUrl?: string | null;
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
@@ -54,8 +76,9 @@ export function Header({
   const count = useCart((s) => s.items.reduce((a, i) => a + i.quantity, 0));
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-cream/95 backdrop-blur">
-      <div className="container-page flex h-20 items-center justify-between gap-6">
+    <header className="sticky top-0 z-40 bg-background">
+      <HeaderBrush brushUrl={brushUrl} />
+      <div className="container-page relative z-10 flex h-20 items-center justify-between gap-6">
         {/* Left: mobile menu + logo */}
         <div className="flex items-center gap-3">
           <button

@@ -1,17 +1,12 @@
 import NextImage from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-import { buttonVariants } from "@/components/ui/button";
-import { Hero, type HeroSlideView } from "@/components/storefront/hero";
-import { CategoryTiles } from "@/components/storefront/category-tiles";
-import { ProductGrid } from "@/components/storefront/product-grid";
+import { HeroCarousel, type HeroSlideView } from "@/components/storefront/hero-carousel";
+import { ProductCard } from "@/components/storefront/product-card";
 import { SectionHeading } from "@/components/storefront/section-heading";
 import {
   getNewestProducts,
-  getTrendingProducts,
   getFeaturedProducts,
   getDiscountedProducts,
-  getTopLevelCategories,
   toCards,
 } from "@/lib/catalog";
 import {
@@ -21,6 +16,8 @@ import {
 } from "@/lib/site-settings";
 import { contentValue } from "@/lib/site-design";
 import { pick } from "@/lib/content";
+import { cn, isRawImage } from "@/lib/utils";
+import type { CardProduct } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -33,34 +30,26 @@ export default async function HomePage({
   setRequestLocale(locale);
   const t = await getTranslations();
 
-  const [
-    newest,
-    trending,
-    featured,
-    discounted,
-    categories,
-    content,
-    images,
-    heroRows,
-  ] = await Promise.all([
-    getNewestProducts(8),
-    getTrendingProducts(4),
-    getFeaturedProducts(8),
-    getDiscountedProducts(4),
-    getTopLevelCategories(),
-    getContentMap(),
-    getSiteImages(),
-    getHeroSlides(),
-  ]);
+  const [newest, featured, discounted, content, images, heroRows] =
+    await Promise.all([
+      getNewestProducts(6),
+      getFeaturedProducts(6),
+      getDiscountedProducts(6),
+      getContentMap(),
+      getSiteImages(),
+      getHeroSlides(),
+    ]);
 
-  const heroImage = images["hero"]?.url ?? null;
-  const collectionImage = images["collection"]?.url ?? null;
+  const c = (key: string) => contentValue(content, key, locale);
+  const img = (slot: string) => images[slot]?.url ?? null;
+  const alt = (slot: string) =>
+    (locale === "en" ? images[slot]?.altEn : images[slot]?.altBg) ?? "";
 
   let heroSlides: HeroSlideView[] = heroRows.map((s) => ({
     eyebrow: pick(locale, s.eyebrowBg, s.eyebrowEn) || null,
-    headline: pick(locale, s.headlineBg, s.headlineEn) || t("site.name"),
+    headline: pick(locale, s.headlineBg, s.headlineEn) || null,
     subtext: pick(locale, s.subtextBg, s.subtextEn) || null,
-    imageUrl: s.imageUrl ?? heroImage,
+    imageUrl: s.imageUrl ?? img("home-hero-art"),
     ctaLabel: pick(locale, s.ctaLabelBg, s.ctaLabelEn) || null,
     ctaHref: s.ctaHref || null,
   }));
@@ -70,120 +59,121 @@ export default async function HomePage({
       {
         eyebrow: null,
         headline: t("site.name"),
-        subtext: contentValue(content, "brand.tagline", locale),
-        imageUrl: heroImage,
+        subtext: c("brand.tagline"),
+        imageUrl: img("home-hero-art"),
         ctaLabel: t("home.heroCtaShop"),
         ctaHref: "/shop",
       },
     ];
   }
 
-  const c = (key: string) => contentValue(content, key, locale);
-
   return (
     <div className="pb-10">
-      <Hero slides={heroSlides} />
+      <HeroCarousel slides={heroSlides} />
 
-      {/* Artist intro */}
-      <section className="container-page mt-14">
-        <div className="rounded-3xl border border-border bg-white p-8 text-center sm:p-12">
-          <h2 className="heading-display text-2xl sm:text-3xl">
-            {c("home.artistTitle")}
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-            {c("home.artistText")}
-          </p>
-        </div>
-      </section>
-
-      <section className="container-page mt-16">
-        <SectionHeading title={c("home.shopByCategoryTitle")} />
-        <CategoryTiles
-          locale={locale}
-          categories={categories.map((cat) => ({
-            slug: cat.slug,
-            nameBg: cat.nameBg,
-            nameEn: cat.nameEn,
-            image: cat.image,
-          }))}
-        />
-      </section>
-
-      <section className="container-page mt-16">
-        <SectionHeading
-          title={c("home.newestTitle")}
-          subtitle={c("home.newestSubtitle")}
-          href="/shop"
-          linkLabel={t("home.viewAll")}
-        />
-        <ProductGrid products={toCards(newest)} locale={locale} />
-      </section>
-
-      {/* Featured collection banner */}
-      <section className="container-page mt-16">
-        <div className="relative flex min-h-[22rem] items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--color-accent)] via-[var(--color-surface)] to-[var(--color-background)]">
-          {collectionImage && (
-            <NextImage
-              src={collectionImage}
-              alt={c("home.collectionTitle")}
-              fill
-              sizes="100vw"
-              className="object-cover"
-              unoptimized={collectionImage.startsWith("data:")}
-            />
-          )}
-          <div className="absolute inset-0 bg-ink/25" />
-          <div className="relative text-center text-white">
-            <h2 className="heading-display text-3xl sm:text-5xl">
-              {c("home.collectionTitle")}
-            </h2>
-            <div className="mt-6">
-              <Link
-                href="/shop"
-                className={buttonVariants({ size: "lg" })}
-              >
-                {c("home.collectionCta")}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <SideProductSection
+        title={c("home.newestTitle")}
+        subtitle={c("home.newestSubtitle")}
+        sideUrl={img("home-side-1")}
+        sideAlt={alt("home-side-1")}
+        sidePosition="left"
+        products={toCards(newest)}
+        locale={locale}
+        viewAllHref="/shop"
+        viewAllLabel={t("home.viewAll")}
+      />
 
       {featured.length > 0 && (
-        <section className="container-page mt-16">
-          <SectionHeading title={c("home.featuredTitle")} />
-          <ProductGrid products={toCards(featured)} locale={locale} />
-        </section>
-      )}
-
-      {trending.length > 0 && (
-        <section className="container-page mt-16">
-          <SectionHeading
-            title={c("home.trendingTitle")}
-            subtitle={c("home.trendingSubtitle")}
-          />
-          <ProductGrid products={toCards(trending)} locale={locale} />
-        </section>
+        <SideProductSection
+          title={c("home.featuredTitle")}
+          sideUrl={img("home-side-2")}
+          sideAlt={alt("home-side-2")}
+          sidePosition="right"
+          products={toCards(featured)}
+          locale={locale}
+        />
       )}
 
       {discounted.length > 0 && (
-        <section className="container-page mt-16">
-          <SectionHeading title={c("home.discountedTitle")} />
-          <ProductGrid products={toCards(discounted)} locale={locale} />
-        </section>
+        <SideProductSection
+          title={c("home.discountedTitle")}
+          sideUrl={img("home-side-3")}
+          sideAlt={alt("home-side-3")}
+          sidePosition="left"
+          products={toCards(discounted)}
+          locale={locale}
+        />
       )}
-
-      {/* Thank-you / gratitude section */}
-      <section className="mt-20 bg-sand">
-        <div className="container-page py-16 text-center">
-          <h2 className="heading-display text-3xl sm:text-4xl">
-            {c("home.thanksTitle")}
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-muted-foreground">
-            {c("home.thanksText")}
-          </p>
-        </div>
-      </section>
     </div>
+  );
+}
+
+function SideProductSection({
+  title,
+  subtitle,
+  sideUrl,
+  sideAlt,
+  sidePosition,
+  products,
+  locale,
+  viewAllHref,
+  viewAllLabel,
+}: {
+  title: string;
+  subtitle?: string;
+  sideUrl: string | null;
+  sideAlt: string;
+  sidePosition: "left" | "right";
+  products: CardProduct[];
+  locale: string;
+  viewAllHref?: string;
+  viewAllLabel?: string;
+}) {
+  if (products.length === 0) return null;
+
+  const side = sideUrl ? (
+    <div className="relative hidden min-h-[20rem] items-center justify-center lg:flex">
+      <NextImage
+        src={sideUrl}
+        alt={sideAlt}
+        aria-hidden={sideAlt ? undefined : true}
+        width={300}
+        height={400}
+        className="h-auto w-full max-w-[300px] object-contain"
+        unoptimized={isRawImage(sideUrl)}
+      />
+    </div>
+  ) : null;
+
+  const grid = (
+    <div className="grid grid-cols-2 gap-x-5 gap-y-9 lg:grid-cols-3">
+      {products.map((p) => (
+        <ProductCard key={p.id} product={p} locale={locale} />
+      ))}
+    </div>
+  );
+
+  return (
+    <section className="container-page mt-20">
+      <SectionHeading
+        title={title}
+        subtitle={subtitle}
+        href={viewAllHref}
+        linkLabel={viewAllLabel}
+      />
+      <div
+        className={cn(
+          "grid items-center gap-8 lg:gap-12",
+          sideUrl &&
+            (sidePosition === "left"
+              ? "lg:grid-cols-[280px_minmax(0,1fr)]"
+              : "lg:grid-cols-[minmax(0,1fr)_280px]"),
+        )}
+      >
+        {sideUrl && sidePosition === "left" && side}
+        {grid}
+        {sideUrl && sidePosition === "right" && side}
+      </div>
+    </section>
   );
 }

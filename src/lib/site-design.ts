@@ -107,10 +107,51 @@ export const SITE_IMAGE_SLOTS: ImageSlot[] = [
     height: 140,
   },
   {
-    slot: "hero",
-    label: "Hero image",
-    description: "Large banner on the homepage hero (when a slide has no own image).",
+    slot: "header-brush",
+    label: "Header brush band",
+    description:
+      "Optional hand-painted brush band shown behind the header menu. Transparent PNG, full width. Leave empty to use the built-in painted ribbon.",
     width: 1600,
+    height: 200,
+  },
+  {
+    slot: "home-hero-art",
+    label: "Homepage hero illustration",
+    description:
+      "Main illustration on the right of the homepage hero (the character / greeting). Transparent PNG recommended.",
+    width: 900,
+    height: 1100,
+  },
+  {
+    slot: "home-hero-brush",
+    label: "Homepage hero brush stroke",
+    description:
+      "Decorative watercolor brush stroke on the left of the hero. Transparent PNG recommended.",
+    width: 700,
+    height: 260,
+  },
+  {
+    slot: "home-side-1",
+    label: "Homepage decoration · New arrivals",
+    description:
+      "Decorative illustration shown next to the “New arrivals” products. Transparent PNG recommended.",
+    width: 700,
+    height: 900,
+  },
+  {
+    slot: "home-side-2",
+    label: "Homepage decoration · Featured",
+    description:
+      "Decorative illustration shown next to the “Featured” products. Transparent PNG recommended.",
+    width: 700,
+    height: 900,
+  },
+  {
+    slot: "home-side-3",
+    label: "Homepage decoration · On sale",
+    description:
+      "Decorative illustration shown next to the “On sale” products. Transparent PNG recommended.",
+    width: 700,
     height: 900,
   },
   {
@@ -119,13 +160,6 @@ export const SITE_IMAGE_SLOTS: ImageSlot[] = [
     description: "Portrait photo on the About page.",
     width: 1000,
     height: 1200,
-  },
-  {
-    slot: "collection",
-    label: "Featured collection banner",
-    description: "Full-width promo banner on the homepage.",
-    width: 1600,
-    height: 900,
   },
   {
     slot: "og-share",

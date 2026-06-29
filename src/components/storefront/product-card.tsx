@@ -12,7 +12,7 @@ import { trackEvent } from "@/components/analytics/ga";
 import { formatPrice } from "@/lib/money";
 import { effectiveUnitPriceCents } from "@/lib/pricing";
 import { pick } from "@/lib/content";
-import { cn } from "@/lib/utils";
+import { cn, isRawImage } from "@/lib/utils";
 import type { CardProduct } from "@/lib/types";
 
 const PLACEHOLDER =
@@ -90,7 +90,7 @@ export function ProductCard({
           fill
           sizes="(max-width: 768px) 50vw, 25vw"
           className="object-cover transition-opacity duration-300 group-hover:opacity-0"
-          unoptimized={image.startsWith("data:")}
+          unoptimized={isRawImage(image)}
         />
         {hover && (
           <Image
@@ -99,6 +99,7 @@ export function ProductCard({
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
             className="object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            unoptimized={isRawImage(hover)}
           />
         )}
 

@@ -10,7 +10,7 @@ import { trackEvent } from "@/components/analytics/ga";
 import { formatPrice } from "@/lib/money";
 import { effectiveUnitPriceCents } from "@/lib/pricing";
 import { pick } from "@/lib/content";
-import { cn } from "@/lib/utils";
+import { cn, isRawImage } from "@/lib/utils";
 
 export interface DetailVariant {
   id: string;
@@ -138,7 +138,7 @@ export function ProductDetail({
             sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-cover"
             priority
-            unoptimized={images[activeImage].url.startsWith("data:")}
+            unoptimized={isRawImage(images[activeImage].url)}
           />
           <div className="absolute left-4 top-4 flex flex-col gap-2">
             {onSale && <Badge variant="sale">-{product.salePercent}%</Badge>}
@@ -161,7 +161,7 @@ export function ProductDetail({
                   fill
                   sizes="80px"
                   className="object-cover"
-                  unoptimized={img.url.startsWith("data:")}
+                  unoptimized={isRawImage(img.url)}
                 />
               </button>
             ))}
