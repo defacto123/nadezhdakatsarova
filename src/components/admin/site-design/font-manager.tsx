@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
@@ -38,9 +38,23 @@ export function FontManager({
   const fileRef = useRef<HTMLInputElement>(null);
   const [label, setLabel] = useState("");
   const [family, setFamily] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  function onFileChange(e: ChangeEvent<HTMLInputElement>) {
+    setError(null);
+    const file = e.target.files?.[0] ?? null;
+    setFileName(file?.name ?? null);
+    if (file) {
+      // Pre-fill label/family from the file name so the admin isn't blocked by
+      // the secondary "enter a label" validation; both stay editable.
+      const base = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+      setLabel((prev) => prev || base);
+      setFamily((prev) => prev || base);
+    }
+  }
 
   // @font-face declarations so previews render in the actual uploaded fonts.
   const faceCss = fonts
@@ -77,6 +91,7 @@ export function FontManager({
       await saveFontAsset({ label, family, url: json.url, format: json.ext });
       setLabel("");
       setFamily("");
+      setFileName(null);
       if (fileRef.current) fileRef.current.value = "";
       router.refresh();
     } catch {
@@ -133,9 +148,15 @@ export function FontManager({
           <input
             ref={fileRef}
             type="file"
-            accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf"
-            className="block text-sm"
+            accept=".woff2,.woff,.ttf,.otf"
+            onChange={onFileChange}
+            className="block text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium"
           />
+          {fileName && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Selected: {fileName}
+            </p>
+          )}
         </div>
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         <Button className="mt-4" onClick={upload} disabled={busy}>

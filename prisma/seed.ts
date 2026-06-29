@@ -144,20 +144,25 @@ const CATALOG: CatDef[] = [
 async function main() {
   console.log("Seeding database...");
 
-  // Admin user
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@example.com";
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "admin12345";
-  await prisma.user.upsert({
-    where: { email: adminEmail.toLowerCase() },
-    update: { role: "ADMIN" },
-    create: {
-      email: adminEmail.toLowerCase(),
-      name: "Store Owner",
-      role: "ADMIN",
-      passwordHash: await bcrypt.hash(adminPassword, 10),
-    },
-  });
-  console.log(`Admin: ${adminEmail} / ${adminPassword}`);
+  // Admin user. Skipped entirely when SEED_SKIP_ADMIN=1 (e.g. production seed),
+  // so the insecure default credentials are never created on a live database.
+  if (process.env.SEED_SKIP_ADMIN === "1") {
+    console.log("Admin seeding skipped (SEED_SKIP_ADMIN=1).");
+  } else {
+    const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@example.com";
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "admin12345";
+    await prisma.user.upsert({
+      where: { email: adminEmail.toLowerCase() },
+      update: { role: "ADMIN" },
+      create: {
+        email: adminEmail.toLowerCase(),
+        name: "Store Owner",
+        role: "ADMIN",
+        passwordHash: await bcrypt.hash(adminPassword, 10),
+      },
+    });
+    console.log(`Admin: ${adminEmail} / ${adminPassword}`);
+  }
 
   // Categories + 5 products each
   for (let ci = 0; ci < CATALOG.length; ci++) {

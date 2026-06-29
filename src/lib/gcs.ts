@@ -1,10 +1,14 @@
-import { Storage } from "@google-cloud/storage";
+import type { Storage } from "@google-cloud/storage";
 import { randomUUID } from "crypto";
 
 let storage: Storage | null = null;
 
-function getStorage(): Storage {
+// Lazily import the SDK only when GCS is actually configured. This keeps the
+// large dependency out of the dev/build graph for local development (which
+// uses the data-URL fallback), where it otherwise made upload routes hang.
+async function getStorage(): Promise<Storage> {
   if (!storage) {
+    const { Storage } = await import("@google-cloud/storage");
     storage = new Storage({
       projectId: process.env.GCS_PROJECT_ID || undefined,
     });
@@ -38,7 +42,7 @@ export async function uploadAsset(
     return `data:${contentType};base64,${buffer.toString("base64")}`;
   }
 
-  const bucket = getStorage().bucket(process.env.GCS_BUCKET as string);
+  const bucket = (await getStorage()).bucket(process.env.GCS_BUCKET as string);
   const file = bucket.file(objectName);
   await file.save(buffer, {
     contentType,

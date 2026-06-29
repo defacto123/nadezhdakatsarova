@@ -16,6 +16,9 @@ if (gcsBase) {
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Keep the heavy Google Cloud SDK out of the bundler; load it at runtime via
+  // require. Avoids extremely slow / hanging dev compiles of the upload routes.
+  serverExternalPackages: ["@google-cloud/storage"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "storage.googleapis.com" },
