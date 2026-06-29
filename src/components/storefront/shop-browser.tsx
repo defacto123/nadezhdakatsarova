@@ -63,7 +63,9 @@ export function ShopBrowser({
         !p.sizes.some((s) => selectedSizes.has(s))
       )
         return false;
-      if (eff(p) / 100 > priceMax) return false;
+      // Compare on the same whole-euro scale as the slider bounds so products
+      // priced just above the floored minimum aren't hidden at the lowest step.
+      if (Math.floor(eff(p) / 100) > priceMax) return false;
       return true;
     });
     if (sort === "priceAsc") list = [...list].sort((a, b) => eff(a) - eff(b));

@@ -150,7 +150,7 @@ export function FontManager({
           <div>
             <Label>Body font</Label>
             <Select
-              defaultValue={bodyFontId ?? ""}
+              value={bodyFontId ?? ""}
               onChange={(e) => assign("body", e.target.value)}
               disabled={pending}
             >
@@ -165,7 +165,7 @@ export function FontManager({
           <div>
             <Label>Heading font</Label>
             <Select
-              defaultValue={headingFontId ?? ""}
+              value={headingFontId ?? ""}
               onChange={(e) => assign("heading", e.target.value)}
               disabled={pending}
             >

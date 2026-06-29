@@ -31,7 +31,10 @@ export function HeroCarousel({ slides }: { slides: HeroSlideView[] }) {
     <section className="container-page mt-14 md:mt-16">
       <div className="relative h-[44vh] min-h-[320px] max-h-[460px] w-full overflow-hidden rounded-2xl bg-sand">
       {slides.map((slide, i) => {
-        const hasText = Boolean(slide.headline || slide.eyebrow || slide.subtext);
+        const hasCta = Boolean(slide.ctaLabel && slide.ctaHref);
+        const hasText = Boolean(
+          slide.headline || slide.eyebrow || slide.subtext || hasCta,
+        );
         return (
           <div
             key={i}

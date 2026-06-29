@@ -290,7 +290,8 @@ async function main() {
   };
   await prisma.siteTheme.upsert({
     where: { id: "default" },
-    update: themeData,
+    // Don't overwrite an admin-customized palette on reseed; only create it.
+    update: {},
     create: { id: "default", ...themeData },
   });
 
@@ -316,7 +317,9 @@ async function main() {
     const url = placeholder(s.w, s.h, s.seed, s.label);
     await prisma.siteImage.upsert({
       where: { slot: s.slot },
-      update: { url, width: s.w, height: s.h },
+      // Only seed a placeholder when the slot is missing; never overwrite an
+      // image the admin has uploaded via the CMS.
+      update: {},
       create: {
         slot: s.slot,
         url,
