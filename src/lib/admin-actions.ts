@@ -253,3 +253,186 @@ export async function sendCampaignNow(id: string) {
   revalidatePath("/admin/campaigns");
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// Site Design
+// ---------------------------------------------------------------------------
+
+/** Revalidate the whole storefront after a site-design change. */
+function revalidateSite() {
+  revalidatePath("/", "layout");
+}
+
+export interface SiteThemeInput {
+  colorBackground: string;
+  colorForeground: string;
+  colorMutedText: string;
+  colorPrimary: string;
+  colorPrimaryHover: string;
+  colorSecondary: string;
+  colorSecondaryHover: string;
+  colorAccent: string;
+  colorSurface: string;
+  colorBorder: string;
+  colorSale: string;
+  radiusRem: number;
+  bodyFontId: string | null;
+  headingFontId: string | null;
+}
+
+export async function saveSiteTheme(input: SiteThemeInput) {
+  await assertAdmin();
+  await prisma.siteTheme.upsert({
+    where: { id: "default" },
+    update: input,
+    create: { id: "default", ...input },
+  });
+  revalidatePath("/admin/site-design/theme");
+  revalidateSite();
+}
+
+export interface ContentBlockInput {
+  key: string;
+  valueBg: string;
+  valueEn: string;
+}
+
+export async function saveContentBlocks(blocks: ContentBlockInput[]) {
+  await assertAdmin();
+  for (const b of blocks) {
+    await prisma.contentBlock.upsert({
+      where: { key: b.key },
+      update: { valueBg: b.valueBg, valueEn: b.valueEn },
+      create: { key: b.key, valueBg: b.valueBg, valueEn: b.valueEn },
+    });
+  }
+  revalidatePath("/admin/site-design/content");
+  revalidateSite();
+}
+
+export interface SiteImageInput {
+  slot: string;
+  url: string;
+  altBg: string | null;
+  altEn: string | null;
+  width: number;
+  height: number;
+}
+
+export async function saveSiteImage(input: SiteImageInput) {
+  await assertAdmin();
+  const { slot, ...rest } = input;
+  await prisma.siteImage.upsert({
+    where: { slot },
+    update: rest,
+    create: { slot, ...rest },
+  });
+  revalidatePath("/admin/site-design/images");
+  revalidateSite();
+}
+
+export async function deleteSiteImage(slot: string) {
+  await assertAdmin();
+  await prisma.siteImage.deleteMany({ where: { slot } });
+  revalidatePath("/admin/site-design/images");
+  revalidateSite();
+}
+
+export interface FontAssetInput {
+  label: string;
+  family: string;
+  url: string;
+  format: string;
+}
+
+export async function saveFontAsset(input: FontAssetInput) {
+  await assertAdmin();
+  const created = await prisma.fontAsset.create({ data: input });
+  revalidatePath("/admin/site-design/fonts");
+  return { id: created.id };
+}
+
+export async function deleteFontAsset(id: string) {
+  await assertAdmin();
+  await prisma.fontAsset.delete({ where: { id } });
+  revalidatePath("/admin/site-design/fonts");
+  revalidateSite();
+}
+
+export async function setActiveFont(
+  role: "body" | "heading",
+  fontId: string | null,
+) {
+  await assertAdmin();
+  const data =
+    role === "body" ? { bodyFontId: fontId } : { headingFontId: fontId };
+  await prisma.siteTheme.upsert({
+    where: { id: "default" },
+    update: data,
+    create: { id: "default", ...data },
+  });
+  revalidatePath("/admin/site-design/fonts");
+  revalidateSite();
+}
+
+export interface HeroSlideInput {
+  id?: string;
+  eyebrowBg: string | null;
+  eyebrowEn: string | null;
+  headlineBg: string | null;
+  headlineEn: string | null;
+  subtextBg: string | null;
+  subtextEn: string | null;
+  imageUrl: string | null;
+  ctaLabelBg: string | null;
+  ctaLabelEn: string | null;
+  ctaHref: string | null;
+  sortOrder: number;
+  active: boolean;
+}
+
+export async function saveHeroSlide(input: HeroSlideInput) {
+  await assertAdmin();
+  const { id, ...data } = input;
+  if (id) {
+    await prisma.heroSlide.update({ where: { id }, data });
+  } else {
+    await prisma.heroSlide.create({ data });
+  }
+  revalidatePath("/admin/site-design/hero");
+  revalidateSite();
+}
+
+export async function deleteHeroSlide(id: string) {
+  await assertAdmin();
+  await prisma.heroSlide.delete({ where: { id } });
+  revalidatePath("/admin/site-design/hero");
+  revalidateSite();
+}
+
+export interface SocialLinkInput {
+  id?: string;
+  platform: string;
+  url: string;
+  sortOrder: number;
+  active: boolean;
+}
+
+export async function saveSocialLink(input: SocialLinkInput) {
+  await assertAdmin();
+  const { id, ...data } = input;
+  if (id) {
+    await prisma.socialLink.update({ where: { id }, data });
+  } else {
+    await prisma.socialLink.create({ data });
+  }
+  revalidatePath("/admin/site-design/social");
+  revalidateSite();
+}
+
+export async function deleteSocialLink(id: string) {
+  await assertAdmin();
+  await prisma.socialLink.delete({ where: { id } });
+  revalidatePath("/admin/site-design/social");
+  revalidateSite();
+}

@@ -1,0 +1,68 @@
+name: Seed production database
+
+# Manually-triggered, idempotent seed of the production database via the
+# Cloud SQL Auth Proxy. The seed only creates missing rows (products are
+# skipped if their slug exists; theme/images/content are create-only), so it
+# is safe to re-run. Requires typing "SEED" to confirm.
+#
+# Optional repository secrets:
+#   SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD
+#     If both are set, remove SEED_SKIP_ADMIN below (or set it to 0) to create
+#     a real admin. By default admin creation is skipped on production.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type SEED to confirm seeding the PRODUCTION database'
+        required: true
+        default: ""
+
+jobs:
+  seed:
+    if: ${{ github.event.inputs.confirm == 'SEED' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Seed via Cloud SQL Auth Proxy
+        env:
+          DATABASE_URL: ${{ secrets.MIGRATIONS_DATABASE_URL }}
+          # Don't create the default admin on production. To seed a real admin,
+          # set SEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD secrets and set this to 0.
+          SEED_SKIP_ADMIN: "1"
+          SEED_ADMIN_EMAIL: ${{ secrets.SEED_ADMIN_EMAIL }}
+          SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
+        run: |
+          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.1/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          ./cloud-sql-proxy --port 5432 "${{ vars.CLOUDSQL_INSTANCE }}" &
+          PROXY_PID=$!
+          # Wait for the proxy to accept connections.
+          for i in $(seq 1 30); do
+            (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1 && break
+            sleep 1
+          done
+          npm run db:seed
+          kill $PROXY_PID || true

@@ -8,12 +8,14 @@ export interface CardProduct {
   slug: string;
   titleBg: string;
   titleEn: string;
+  categorySlug: string;
   categoryNameBg: string;
   categoryNameEn: string;
   priceCents: number;
   salePercent: number | null;
   isNew: boolean;
   images: CardImage[];
+  sizes: string[];
   totalStock: number;
   hasVariants: boolean;
 }

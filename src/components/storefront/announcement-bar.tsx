@@ -1,26 +1,34 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { X } from "lucide-react";
 
-export function AnnouncementBar() {
-  const t = useTranslations();
-  const message = t("newsletter.title");
+export function AnnouncementBar({ text }: { text: string }) {
+  const [hidden, setHidden] = useState(false);
+  if (hidden || !text) return null;
+
   const items = Array.from({ length: 6 }, (_, i) => (
     <span key={i} className="mx-6 inline-flex items-center gap-2">
-      {message}
-      <span aria-hidden>•</span>
-      {t("product.vatIncluded")}
+      {text}
       <span aria-hidden>•</span>
     </span>
   ));
+
   return (
-    <div className="overflow-hidden bg-ink text-cream py-2 text-xs uppercase tracking-widest">
+    <div className="relative overflow-hidden bg-blush py-2 text-[11px] uppercase tracking-[0.2em] text-ink">
       <div className="flex w-max animate-marquee whitespace-nowrap">
         <div className="flex">{items}</div>
         <div className="flex" aria-hidden>
           {items}
         </div>
       </div>
+      <button
+        onClick={() => setHidden(true)}
+        aria-label="Dismiss"
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-ink/60 hover:text-ink"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }
