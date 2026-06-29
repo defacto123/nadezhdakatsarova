@@ -4,7 +4,9 @@
     "tagline": "Hand-drawn art on things you'll love"
   },
   "nav": {
+    "home": "Home",
     "shop": "Shop",
+    "allProducts": "All products",
     "catalogs": "Catalogs",
     "about": "About",
     "blog": "Blog",
@@ -13,7 +15,9 @@
     "cart": "Cart",
     "signIn": "Sign in",
     "signOut": "Sign out",
-    "search": "Search"
+    "search": "Search",
+    "sale": "Sale %",
+    "newsletter": "Newsletter"
   },
   "home": {
     "heroCtaShop": "Shop now",
@@ -28,6 +32,19 @@
     "viewAll": "View all products",
     "artistTitle": "Nice you're here!",
     "artistText": "I'm Nadezhda and I draw every illustration you see here. Everything is chosen with love and packed personally. Thank you for supporting independent art!"
+  },
+  "shop": {
+    "title": "Shop",
+    "home": "Home",
+    "filterByPrice": "Filter by price",
+    "filterBySize": "Filter by size",
+    "filterByCategories": "Filter by categories",
+    "price": "Price",
+    "showing": "Showing {count} of {total} results",
+    "sortLatest": "Sort by latest",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "noResults": "No products match your filters."
   },
   "product": {
     "addToCart": "Add to cart",

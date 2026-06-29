@@ -21,17 +21,26 @@ export function totalStock(p: ProductCard): number {
 
 /** Map a Prisma product into a serializable shape safe to pass to client components. */
 export function toCard(p: ProductCard): CardProduct {
+  const sizes = Array.from(
+    new Set(
+      p.variants
+        .map((v) => v.size)
+        .filter((s): s is string => Boolean(s)),
+    ),
+  );
   return {
     id: p.id,
     slug: p.slug,
     titleBg: p.titleBg,
     titleEn: p.titleEn,
+    categorySlug: p.category.slug,
     categoryNameBg: p.category.nameBg,
     categoryNameEn: p.category.nameEn,
     priceCents: p.priceCents,
     salePercent: p.salePercent,
     isNew: p.isNew,
     images: p.images.map((i) => ({ url: i.url, alt: i.alt })),
+    sizes,
     totalStock: totalStock(p),
     hasVariants: p.variants.length > 0,
   };

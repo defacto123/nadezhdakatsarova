@@ -1,76 +1,93 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import NextImage from "next/image";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 
-const SLIDES = [
-  {
-    eyebrow: "Handmade · Limited",
-    bg: "from-[#e9c7b8] via-[#f1e8da] to-[#fbf7f0]",
-  },
-  {
-    eyebrow: "New collection",
-    bg: "from-[#cdd6bf] via-[#eef0e6] to-[#fbf7f0]",
-  },
-  {
-    eyebrow: "Art you can wear",
-    bg: "from-[#f3d9cd] via-[#f6ece2] to-[#fbf7f0]",
-  },
-];
+export type HeroSlideView = {
+  eyebrow: string | null;
+  headline: string;
+  subtext: string | null;
+  imageUrl: string | null;
+  ctaLabel: string | null;
+  ctaHref: string | null;
+};
 
-export function Hero() {
-  const t = useTranslations();
+export function Hero({ slides }: { slides: HeroSlideView[] }) {
   const [index, setIndex] = useState(0);
+  const count = slides.length;
 
   useEffect(() => {
-    const id = setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), 6000);
+    if (count <= 1) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % count), 6000);
     return () => clearInterval(id);
-  }, []);
+  }, [count]);
 
-  const slide = SLIDES[index];
+  if (count === 0) return null;
+  const slide = slides[Math.min(index, count - 1)];
+  const hasImage = Boolean(slide.imageUrl);
 
   return (
     <section className="container-page pt-6">
       <div
-        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${slide.bg} px-6 py-16 transition-all duration-700 sm:px-12 sm:py-24`}
+        className="relative grid overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--color-accent)] via-[var(--color-surface)] to-[var(--color-background)] md:grid-cols-2"
+        style={{ minHeight: "26rem" }}
       >
-        <div className="max-w-xl">
-          <span className="text-xs font-semibold uppercase tracking-[0.25em] text-ink-soft">
-            {slide.eyebrow}
-          </span>
-          <h1 className="mt-4 heading-display text-4xl leading-tight sm:text-6xl">
-            {t("site.name")}
+        <div className="flex flex-col justify-center px-6 py-14 sm:px-12">
+          {slide.eyebrow && (
+            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-ink-soft">
+              {slide.eyebrow}
+            </span>
+          )}
+          <h1 className="mt-4 heading-display text-4xl leading-tight sm:text-5xl lg:text-6xl">
+            {slide.headline}
           </h1>
-          <p className="mt-4 max-w-md text-base text-ink-soft sm:text-lg">
-            {t("site.tagline")}
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/shop" className={buttonVariants({ size: "lg" })}>
-              {t("home.heroCtaShop")}
-            </Link>
-            <Link
-              href="/shop"
-              className={buttonVariants({ size: "lg", variant: "outline" })}
-            >
-              {t("home.heroCtaCatalogs")}
-            </Link>
-          </div>
+          {slide.subtext && (
+            <p className="mt-4 max-w-md text-base text-ink-soft sm:text-lg">
+              {slide.subtext}
+            </p>
+          )}
+          {slide.ctaLabel && slide.ctaHref && (
+            <div className="mt-8">
+              <Link
+                href={slide.ctaHref}
+                className={buttonVariants({ size: "lg" })}
+              >
+                {slide.ctaLabel}
+              </Link>
+            </div>
+          )}
         </div>
 
-        <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2">
-          {SLIDES.map((_, i) => (
-            <button
-              key={i}
-              aria-label={`Slide ${i + 1}`}
-              onClick={() => setIndex(i)}
-              className={`h-2 rounded-full transition-all ${
-                i === index ? "w-8 bg-ink" : "w-2 bg-ink/30"
-              }`}
+        {hasImage && (
+          <div className="relative min-h-64 md:min-h-full">
+            <NextImage
+              src={slide.imageUrl as string}
+              alt={slide.headline}
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+              unoptimized={(slide.imageUrl as string).startsWith("data:")}
+              priority
             />
-          ))}
-        </div>
+          </div>
+        )}
+
+        {count > 1 && (
+          <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                aria-label={`Slide ${i + 1}`}
+                onClick={() => setIndex(i)}
+                className={`h-2 rounded-full transition-all ${
+                  i === index ? "w-8 bg-ink" : "w-2 bg-ink/30"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

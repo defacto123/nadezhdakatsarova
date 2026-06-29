@@ -4,21 +4,56 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { NewsletterSignup } from "./newsletter-signup";
 
-export function Footer() {
+type Social = { platform: string; url: string };
+
+export function Footer({
+  newsletterTitle,
+  newsletterSubtitle,
+  blurb,
+  socials,
+}: {
+  newsletterTitle: string;
+  newsletterSubtitle: string;
+  blurb: string;
+  socials: Social[];
+}) {
   const t = useTranslations();
   const year = new Date().getFullYear();
 
   return (
     <footer className="mt-20 border-t border-border bg-sand">
-      <div className="container-page grid gap-10 py-14 md:grid-cols-4">
-        <div className="md:col-span-2">
-          <h3 className="heading-display text-2xl">{t("newsletter.title")}</h3>
-          <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            {t("newsletter.subtitle")}
+      {/* Prominent newsletter block */}
+      <div id="newsletter" className="border-b border-border/60">
+        <div className="container-page py-14 text-center">
+          <h3 className="heading-display text-3xl">{newsletterTitle}</h3>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+            {newsletterSubtitle}
           </p>
-          <div className="mt-4 max-w-md">
+          <div className="mx-auto mt-5 max-w-md">
             <NewsletterSignup />
           </div>
+        </div>
+      </div>
+
+      <div className="container-page grid gap-10 py-14 md:grid-cols-4">
+        <div className="md:col-span-2">
+          <h4 className="heading-display text-xl">{t("site.name")}</h4>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">{blurb}</p>
+          {socials.length > 0 && (
+            <div className="mt-4 flex gap-4 text-sm">
+              {socials.map((s) => (
+                <a
+                  key={s.platform + s.url}
+                  href={s.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  {s.platform}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
@@ -65,22 +100,9 @@ export function Footer() {
               </Link>
             </li>
           </ul>
-          <div className="mt-4 flex gap-4 text-sm">
-            <a
-              href="https://instagram.com"
-              className="text-muted-foreground hover:text-primary"
-            >
-              Instagram
-            </a>
-            <a
-              href="https://facebook.com"
-              className="text-muted-foreground hover:text-primary"
-            >
-              Facebook
-            </a>
-          </div>
         </div>
       </div>
+
       <div className="border-t border-border">
         <div className="container-page flex flex-col items-center justify-between gap-2 py-6 text-xs text-muted-foreground sm:flex-row">
           <span>

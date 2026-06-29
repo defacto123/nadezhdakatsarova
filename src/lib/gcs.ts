@@ -23,15 +23,15 @@ const PUBLIC_BASE =
     : "");
 
 /**
- * Upload an image buffer to GCS and return its public URL.
+ * Upload an arbitrary asset buffer to GCS and return its public URL.
  * Falls back to a data URL when GCS is not configured (useful for local dev).
  */
-export async function uploadImage(
+export async function uploadAsset(
   buffer: Buffer,
   contentType: string,
-  folder = "products",
+  folder: string,
+  ext: string,
 ): Promise<string> {
-  const ext = contentType.split("/")[1] ?? "bin";
   const objectName = `${folder}/${randomUUID()}.${ext}`;
 
   if (!isGcsConfigured()) {
@@ -46,4 +46,16 @@ export async function uploadImage(
     metadata: { cacheControl: "public, max-age=31536000, immutable" },
   });
   return `${PUBLIC_BASE}/${objectName}`;
+}
+
+/**
+ * Upload an image buffer to GCS and return its public URL.
+ */
+export async function uploadImage(
+  buffer: Buffer,
+  contentType: string,
+  folder = "products",
+): Promise<string> {
+  const ext = contentType.split("/")[1] ?? "bin";
+  return uploadAsset(buffer, contentType, folder, ext);
 }

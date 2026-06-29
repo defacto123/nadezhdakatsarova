@@ -5,16 +5,16 @@
   Brand: terracotta/clay. Secondary: sage. Surfaces: warm cream/sand. Ink text.
 */
 @theme {
-  --color-cream: #fbf7f0;
-  --color-sand: #f1e8da;
-  --color-ink: #2b2622;
-  --color-ink-soft: #6b6258;
-  --color-clay: #c4633f;
-  --color-clay-dark: #a64f30;
-  --color-sage: #7d8a6a;
-  --color-sage-dark: #5f6b4f;
-  --color-blush: #e9c7b8;
-  --color-line: #e6dccb;
+  --color-cream: #fdfcfa;
+  --color-sand: #f4efe9;
+  --color-ink: #2c2a28;
+  --color-ink-soft: #7c756c;
+  --color-clay: #b76e5b;
+  --color-clay-dark: #9c5848;
+  --color-sage: #8a9a86;
+  --color-sage-dark: #6f7e6b;
+  --color-blush: #e8d3c7;
+  --color-line: #ece5db;
 
   --color-background: var(--color-cream);
   --color-foreground: var(--color-ink);
@@ -23,6 +23,7 @@
   --color-muted: var(--color-sand);
   --color-muted-foreground: var(--color-ink-soft);
   --color-border: var(--color-line);
+  --color-sale: var(--color-clay);
 
   --font-display: var(--font-fraunces), Georgia, serif;
   --font-sans: var(--font-inter), system-ui, sans-serif;

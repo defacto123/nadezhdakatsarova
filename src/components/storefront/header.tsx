@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import NextImage from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import { Menu, Search, ShoppingBag, User, X, ChevronDown, Heart } from "lucide-react";
 import { useCart } from "@/lib/cart-store";
 import { useIsHydrated } from "@/lib/hooks";
 import { pick } from "@/lib/content";
@@ -11,13 +12,41 @@ import { LocaleSwitcher } from "./locale-switcher";
 import { cn } from "@/lib/utils";
 
 type Cat = { slug: string; nameBg: string; nameEn: string };
+type Brand = { line1: string; line2: string };
+type Logo = { url: string; alt: string } | null;
+
+function Logotype({ logo, brand }: { logo: Logo; brand: Brand }) {
+  if (logo) {
+    return (
+      <span className="relative block h-11 w-36">
+        <NextImage
+          src={logo.url}
+          alt={logo.alt || brand.line1}
+          fill
+          className="object-contain object-left"
+          unoptimized={logo.url.startsWith("data:")}
+          priority
+        />
+      </span>
+    );
+  }
+  return (
+    <span className="heading-display text-2xl italic leading-none">
+      {brand.line1}
+    </span>
+  );
+}
 
 export function Header({
   locale,
   categories,
+  brand,
+  logo,
 }: {
   locale: string;
   categories: Cat[];
+  brand: Brand;
+  logo: Logo;
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
@@ -25,32 +54,39 @@ export function Header({
   const count = useCart((s) => s.items.reduce((a, i) => a + i.quantity, 0));
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-cream/90 backdrop-blur">
-      <div className="container-page flex h-16 items-center justify-between gap-4">
-        <button
-          className="md:hidden"
-          onClick={() => setOpen(true)}
-          aria-label="Menu"
-        >
-          <Menu className="h-6 w-6" />
-        </button>
+    <header className="sticky top-0 z-40 border-b border-border bg-cream/95 backdrop-blur">
+      <div className="container-page flex h-20 items-center justify-between gap-6">
+        {/* Left: mobile menu + logo */}
+        <div className="flex items-center gap-3">
+          <button
+            className="lg:hidden"
+            onClick={() => setOpen(true)}
+            aria-label="Menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+          <Link href="/" aria-label={brand.line1}>
+            <Logotype logo={logo} brand={brand} />
+          </Link>
+        </div>
 
-        <Link href="/" className="flex flex-col leading-none">
-          <span className="heading-display text-xl font-semibold tracking-tight">
-            Nadezhda
-          </span>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Katsarova · Art
-          </span>
-        </Link>
-
-        <nav className="hidden items-center gap-7 text-sm md:flex">
-          <Link href="/shop" className="hover:text-primary">
-            {t("shop")}
+        {/* Center: primary navigation */}
+        <nav className="hidden items-center gap-7 text-sm lg:flex">
+          <Link href="/" className="hover:text-primary">
+            {t("home")}
           </Link>
           <div className="group relative">
-            <button className="hover:text-primary">{t("catalogs")}</button>
+            <button className="inline-flex items-center gap-1 hover:text-primary">
+              {t("shop")}
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
             <div className="invisible absolute left-1/2 z-50 mt-3 w-56 -translate-x-1/2 rounded-2xl border border-border bg-white p-2 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100">
+              <Link
+                href="/shop"
+                className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-muted"
+              >
+                {t("allProducts")}
+              </Link>
               {categories.map((c) => (
                 <Link
                   key={c.slug}
@@ -60,13 +96,14 @@ export function Header({
                   {pick(locale, c.nameBg, c.nameEn)}
                 </Link>
               ))}
-              {categories.length === 0 && (
-                <span className="block px-3 py-2 text-sm text-muted-foreground">
-                  —
-                </span>
-              )}
             </div>
           </div>
+          <Link href="/shop" className="font-medium text-[var(--color-sale)]">
+            {t("sale")}
+          </Link>
+          <a href="#newsletter" className="hover:text-primary">
+            {t("newsletter")}
+          </a>
           <Link href="/about" className="hover:text-primary">
             {t("about")}
           </Link>
@@ -75,19 +112,19 @@ export function Header({
           </Link>
         </nav>
 
+        {/* Right: icons */}
         <div className="flex items-center gap-4">
           <LocaleSwitcher className="hidden sm:flex" />
+          <Link href="/account" aria-label="Wishlist" className="hidden sm:block">
+            <Heart className="h-5 w-5 hover:text-primary" />
+          </Link>
           <Link href="/search" aria-label={t("search")}>
             <Search className="h-5 w-5 hover:text-primary" />
           </Link>
           <Link href="/account" aria-label={t("account")}>
             <User className="h-5 w-5 hover:text-primary" />
           </Link>
-          <Link
-            href="/cart"
-            aria-label={t("cart")}
-            className="relative"
-          >
+          <Link href="/cart" aria-label={t("cart")} className="relative">
             <ShoppingBag className="h-5 w-5 hover:text-primary" />
             {mounted && count > 0 && (
               <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
@@ -101,7 +138,7 @@ export function Header({
       {/* Mobile drawer */}
       <div
         className={cn(
-          "fixed inset-0 z-50 bg-black/40 transition-opacity md:hidden",
+          "fixed inset-0 z-50 bg-black/40 transition-opacity lg:hidden",
           open ? "visible opacity-100" : "invisible opacity-0",
         )}
         onClick={() => setOpen(false)}
@@ -114,12 +151,17 @@ export function Header({
           onClick={(e) => e.stopPropagation()}
         >
           <div className="mb-6 flex items-center justify-between">
-            <span className="heading-display text-lg font-semibold">Меню</span>
+            <span className="heading-display text-lg font-semibold italic">
+              {brand.line1}
+            </span>
             <button onClick={() => setOpen(false)} aria-label="Close">
               <X className="h-6 w-6" />
             </button>
           </div>
           <nav className="flex flex-col gap-1 text-sm">
+            <Link href="/" onClick={() => setOpen(false)} className="py-2">
+              {t("home")}
+            </Link>
             <Link href="/shop" onClick={() => setOpen(false)} className="py-2">
               {t("shop")}
             </Link>
@@ -136,6 +178,13 @@ export function Header({
                 {pick(locale, c.nameBg, c.nameEn)}
               </Link>
             ))}
+            <Link
+              href="/shop"
+              onClick={() => setOpen(false)}
+              className="py-2 font-medium text-[var(--color-sale)]"
+            >
+              {t("sale")}
+            </Link>
             <Link href="/about" onClick={() => setOpen(false)} className="py-2">
               {t("about")}
             </Link>

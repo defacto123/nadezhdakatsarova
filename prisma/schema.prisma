@@ -295,3 +295,93 @@ model Campaign {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 }
+
+// ---------------------------------------------------------------------------
+// Site Design (CMS-managed theme, fonts, images, static content)
+// ---------------------------------------------------------------------------
+
+// Uploaded custom font file (woff2/woff/ttf/otf), assignable as body/heading.
+model FontAsset {
+  id        String   @id @default(cuid())
+  label     String
+  family    String
+  url       String
+  format    String
+  createdAt DateTime @default(now())
+
+  bodyThemes    SiteTheme[] @relation("BodyFont")
+  headingThemes SiteTheme[] @relation("HeadingFont")
+}
+
+// Single-row theme configuration. Colors stored as hex strings mirroring the
+// CSS design tokens; applied at runtime via injected CSS variables.
+model SiteTheme {
+  id                  String     @id @default("default")
+  colorBackground     String     @default("#fbf7f0")
+  colorForeground     String     @default("#2b2622")
+  colorMutedText      String     @default("#6b6258")
+  colorPrimary        String     @default("#c4633f")
+  colorPrimaryHover   String     @default("#a64f30")
+  colorSecondary      String     @default("#7d8a6a")
+  colorSecondaryHover String     @default("#5f6b4f")
+  colorAccent         String     @default("#e9c7b8")
+  colorSurface        String     @default("#f1e8da")
+  colorBorder         String     @default("#e6dccb")
+  colorSale           String     @default("#c4633f")
+  radiusRem           Float      @default(0.85)
+  bodyFontId          String?
+  bodyFont           FontAsset? @relation("BodyFont", fields: [bodyFontId], references: [id], onDelete: SetNull)
+  headingFontId       String?
+  headingFont        FontAsset? @relation("HeadingFont", fields: [headingFontId], references: [id], onDelete: SetNull)
+  updatedAt           DateTime   @updatedAt
+}
+
+// Named image slot (logo, hero, about-portrait, og-share, ...) with the exact
+// dimensions enforced on upload.
+model SiteImage {
+  id        String   @id @default(cuid())
+  slot      String   @unique
+  url       String
+  altBg     String?
+  altEn     String?
+  width     Int
+  height    Int
+  updatedAt DateTime @updatedAt
+}
+
+// Editable static copy keyed by a registry key, bilingual.
+model ContentBlock {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  valueBg   String   @db.Text
+  valueEn   String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+// Repeatable hero slides shown on the homepage.
+model HeroSlide {
+  id         String   @id @default(cuid())
+  eyebrowBg  String?
+  eyebrowEn  String?
+  headlineBg String?
+  headlineEn String?
+  subtextBg  String?  @db.Text
+  subtextEn  String?  @db.Text
+  imageUrl   String?
+  ctaLabelBg String?
+  ctaLabelEn String?
+  ctaHref    String?
+  sortOrder  Int      @default(0)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// Footer / social media links.
+model SocialLink {
+  id        String  @id @default(cuid())
+  platform  String
+  url       String
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+}
