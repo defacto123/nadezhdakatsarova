@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import {
   DEFAULT_THEME,
@@ -7,6 +8,21 @@ import {
   type ThemeValues,
   type ContentMap,
 } from "@/lib/site-design";
+
+// Cache tags for the rarely-changing, CMS-managed data that the shared layout
+// reads on every navigation. The public storefront reads through these caches
+// for speed; admin screens read the DB directly so the CMS is always live. Each
+// admin mutation calls revalidateTag(...) so edits show up immediately, with a
+// time-based revalidate as a safety net.
+export const CACHE_TAGS = {
+  content: "site-content",
+  images: "site-images",
+  socials: "site-socials",
+  theme: "site-theme",
+  categories: "site-categories",
+} as const;
+
+const CACHE_TTL_SECONDS = 3600;
 
 export interface ActiveFont {
   id: string;
@@ -36,8 +52,8 @@ const fontFormat = (f: { format: string }) => {
 };
 
 /** Theme + active fonts. Falls back to defaults if missing or DB unavailable. */
-export const getResolvedTheme = cache(async (): Promise<ResolvedTheme> => {
-  try {
+const resolvedThemeCached = unstable_cache(
+  async (): Promise<ResolvedTheme> => {
     const theme = await prisma.siteTheme.findUnique({
       where: { id: "default" },
       include: { bodyFont: true, headingFont: true },
@@ -78,6 +94,14 @@ export const getResolvedTheme = cache(async (): Promise<ResolvedTheme> => {
           }
         : null,
     };
+  },
+  ["site-resolved-theme"],
+  { tags: [CACHE_TAGS.theme], revalidate: CACHE_TTL_SECONDS },
+);
+
+export const getResolvedTheme = cache(async (): Promise<ResolvedTheme> => {
+  try {
+    return await resolvedThemeCached();
   } catch {
     return { ...DEFAULT_THEME, bodyFont: null, headingFont: null };
   }
@@ -91,29 +115,48 @@ export const getFontAssets = cache(async () => {
   }
 });
 
-export const getContentMap = cache(async (): Promise<ContentMap> => {
-  try {
+const contentMapCached = unstable_cache(
+  async (): Promise<ContentMap> => {
     const rows = await prisma.contentBlock.findMany();
     const map: ContentMap = {};
     for (const r of rows) map[r.key] = { valueBg: r.valueBg, valueEn: r.valueEn };
     return map;
+  },
+  ["site-content-map"],
+  { tags: [CACHE_TAGS.content], revalidate: CACHE_TTL_SECONDS },
+);
+
+export const getContentMap = cache(async (): Promise<ContentMap> => {
+  try {
+    return await contentMapCached();
   } catch {
     return {};
   }
 });
 
-export const getSiteImages = cache(
-  async (): Promise<Record<string, { url: string; altBg: string | null; altEn: string | null }>> => {
-    try {
-      const rows = await prisma.siteImage.findMany();
-      const map: Record<string, { url: string; altBg: string | null; altEn: string | null }> = {};
-      for (const r of rows) map[r.slot] = { url: r.url, altBg: r.altBg, altEn: r.altEn };
-      return map;
-    } catch {
-      return {};
-    }
+type SiteImageMap = Record<
+  string,
+  { url: string; altBg: string | null; altEn: string | null }
+>;
+
+const siteImagesCached = unstable_cache(
+  async (): Promise<SiteImageMap> => {
+    const rows = await prisma.siteImage.findMany();
+    const map: SiteImageMap = {};
+    for (const r of rows) map[r.slot] = { url: r.url, altBg: r.altBg, altEn: r.altEn };
+    return map;
   },
+  ["site-images-map"],
+  { tags: [CACHE_TAGS.images], revalidate: CACHE_TTL_SECONDS },
 );
+
+export const getSiteImages = cache(async (): Promise<SiteImageMap> => {
+  try {
+    return await siteImagesCached();
+  } catch {
+    return {};
+  }
+});
 
 export const getHeroSlides = cache(async () => {
   try {
@@ -126,12 +169,19 @@ export const getHeroSlides = cache(async () => {
   }
 });
 
-export const getSocialLinks = cache(async () => {
-  try {
-    return await prisma.socialLink.findMany({
+const socialLinksCached = unstable_cache(
+  async () =>
+    prisma.socialLink.findMany({
       where: { active: true },
       orderBy: { sortOrder: "asc" },
-    });
+    }),
+  ["site-social-links"],
+  { tags: [CACHE_TAGS.socials], revalidate: CACHE_TTL_SECONDS },
+);
+
+export const getSocialLinks = cache(async () => {
+  try {
+    return await socialLinksCached();
   } catch {
     return [];
   }
