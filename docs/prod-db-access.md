@@ -62,10 +62,23 @@ A web-based table browser/editor. With the proxy running and `DATABASE_URL`
 exported as above:
 
 ```bash
-npx prisma studio        # opens http://localhost:5555
-# or the repo script (reads .env, so export DATABASE_URL in that shell first):
+npx prisma studio                 # opens http://localhost:5555
+npx prisma studio --browser none  # headless: start the server without auto-opening a browser
+# or the repo script:
 npm run db:studio
 ```
+
+**Important — which DB does Studio connect to?** The Prisma CLI loads `.env`
+(your *local* `DATABASE_URL`) and prints "Environment variables loaded from
+.env". However, dotenv does **not** override a variable that is already set in
+the shell, so an **exported** `DATABASE_URL` (the prod proxy URL from Step 2)
+wins. Always `export DATABASE_URL=...127.0.0.1:5432...` in the same shell
+before launching, and trust the exported value over the `.env` line.
+
+**Agents:** you can launch this in the background — start the proxy, `export`
+the prod `DATABASE_URL`, then run `npx prisma studio --browser none`, and hand
+the user `http://localhost:5555`. Remember `required_permissions: ["all"]` for
+the `gcloud`/proxy steps. Stop both processes when the user is done.
 
 ### B) A desktop SQL client (TablePlus, DBeaver, pgAdmin)
 With the proxy running, connect the client to:
