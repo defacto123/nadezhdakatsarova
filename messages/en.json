@@ -60,7 +60,12 @@
     "new": "New",
     "sale": "Sale",
     "haveCode": "Have a discount code?",
-    "vatIncluded": "All prices include VAT."
+    "vatIncluded": "All prices include VAT.",
+    "zoomImage": "Zoom image",
+    "close": "Close",
+    "previous": "Previous",
+    "next": "Next",
+    "image": "Image"
   },
   "cart": {
     "title": "Your cart",

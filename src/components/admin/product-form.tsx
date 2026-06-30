@@ -7,6 +7,7 @@ import { Trash2, Plus, Upload } from "lucide-react";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { saveProduct, deleteProduct } from "@/lib/admin-actions";
+import { PRODUCT_IMAGE } from "@/lib/site-design";
 import { slugify } from "@/lib/utils";
 
 interface CategoryOpt {
@@ -270,6 +271,11 @@ export function ProductForm({
       {/* Images */}
       <div>
         <Label>Images</Label>
+        <p className="mb-2 text-xs text-muted-foreground">
+          Recommended: square images, {PRODUCT_IMAGE.width}×{PRODUCT_IMAGE.height}px
+          (1:1). Product photos are shown in square frames, so square images
+          avoid cropping.
+        </p>
         <div className="flex flex-wrap gap-3">
           {data.images.map((img, i) => (
             <div key={i} className="relative h-24 w-24 overflow-hidden rounded-xl border border-border">
