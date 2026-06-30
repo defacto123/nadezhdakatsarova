@@ -62,7 +62,10 @@ function HeaderBrush({
         backgroundSize: "100% 170px",
         backgroundPosition: "center bottom",
         opacity: brush.opacity / 100,
-        filter: `saturate(${brush.saturate}%) hue-rotate(${brush.hue}deg)`,
+        // grayscale+sepia normalise the stroke to a single tintable base so the
+        // hue/saturation controls can reach any vivid colour (not just shifts of
+        // the original paint colour) while keeping the painted texture.
+        filter: `grayscale(1) sepia(1) saturate(${brush.saturate}%) hue-rotate(${brush.hue}deg)`,
       }}
     />
   );
