@@ -62,6 +62,11 @@ function HeaderBrush({
         backgroundSize: "100% 170px",
         backgroundPosition: "center bottom",
         opacity: brush.opacity / 100,
+        // multiply drops the image's white background out against the light page
+        // (white * background = background) so an uploaded brush that has a solid
+        // white box still reads as a clean transparent stroke. Only the painted
+        // strokes remain visible.
+        mixBlendMode: "multiply",
         // grayscale+sepia normalise the stroke to a single tintable base so the
         // hue/saturation controls can reach any vivid colour (not just shifts of
         // the original paint colour) while keeping the painted texture.
