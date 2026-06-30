@@ -134,16 +134,32 @@ export const getContentMap = cache(async (): Promise<ContentMap> => {
   }
 });
 
-type SiteImageMap = Record<
-  string,
-  { url: string; altBg: string | null; altEn: string | null }
->;
+export type SiteImageView = {
+  url: string;
+  altBg: string | null;
+  altEn: string | null;
+  animated: boolean;
+  motion: string;
+  speed: number;
+  bgColor: string | null;
+};
+
+type SiteImageMap = Record<string, SiteImageView>;
 
 const siteImagesCached = unstable_cache(
   async (): Promise<SiteImageMap> => {
     const rows = await prisma.siteImage.findMany();
     const map: SiteImageMap = {};
-    for (const r of rows) map[r.slot] = { url: r.url, altBg: r.altBg, altEn: r.altEn };
+    for (const r of rows)
+      map[r.slot] = {
+        url: r.url,
+        altBg: r.altBg,
+        altEn: r.altEn,
+        animated: r.animated,
+        motion: r.motion,
+        speed: r.speed,
+        bgColor: r.bgColor,
+      };
     return map;
   },
   ["site-images-map"],

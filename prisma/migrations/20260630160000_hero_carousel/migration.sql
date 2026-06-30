@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "HeroSlide" ADD COLUMN     "kind" TEXT NOT NULL DEFAULT 'single',
+ADD COLUMN     "imageUrl2" TEXT,
+ADD COLUMN     "href" TEXT,
+ADD COLUMN     "motion1" TEXT NOT NULL DEFAULT 'float',
+ADD COLUMN     "speed1" INTEGER NOT NULL DEFAULT 4,
+ADD COLUMN     "motion2" TEXT NOT NULL DEFAULT 'float',
+ADD COLUMN     "speed2" INTEGER NOT NULL DEFAULT 4;

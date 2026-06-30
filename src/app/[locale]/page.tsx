@@ -14,8 +14,11 @@ import {
   getSiteImages,
   getHeroSlides,
 } from "@/lib/site-settings";
-import { contentValue } from "@/lib/site-design";
-import { pick } from "@/lib/content";
+import {
+  contentValue,
+  heroMotionClassName,
+  heroMotionInlineStyle,
+} from "@/lib/site-design";
 import { cn, isRawImage } from "@/lib/utils";
 import type { CardProduct } from "@/lib/types";
 
@@ -41,28 +44,60 @@ export default async function HomePage({
     ]);
 
   const c = (key: string) => contentValue(content, key, locale);
-  const img = (slot: string) => images[slot]?.url ?? null;
-  const alt = (slot: string) =>
-    (locale === "en" ? images[slot]?.altEn : images[slot]?.altBg) ?? "";
+  const sideImage = (slot: string): SideImage | null => {
+    const r = images[slot];
+    if (!r) return null;
+    return {
+      url: r.url,
+      alt: (locale === "en" ? r.altEn : r.altBg) ?? "",
+      animated: r.animated,
+      motion: r.motion,
+      speed: r.speed,
+      bgColor: r.bgColor,
+    };
+  };
 
   let heroSlides: HeroSlideView[] = heroRows.map((s) => ({
-    eyebrow: pick(locale, s.eyebrowBg, s.eyebrowEn) || null,
-    headline: pick(locale, s.headlineBg, s.headlineEn) || null,
-    subtext: pick(locale, s.subtextBg, s.subtextEn) || null,
+    kind: s.kind === "pair" ? "pair" : "single",
     imageUrl: s.imageUrl ?? null,
-    ctaLabel: pick(locale, s.ctaLabelBg, s.ctaLabelEn) || null,
-    ctaHref: s.ctaHref || null,
+    imageUrl2: s.imageUrl2 ?? null,
+    href: s.href ?? null,
+    motion1: s.motion1,
+    speed1: s.speed1,
+    animated1: s.animated1,
+    motion2: s.motion2,
+    speed2: s.speed2,
+    animated2: s.animated2,
+    bgColor: s.bgColor ?? null,
   }));
 
   if (heroSlides.length === 0) {
     heroSlides = [
       {
-        eyebrow: null,
-        headline: t("site.name"),
-        subtext: c("brand.tagline"),
-        imageUrl: null,
-        ctaLabel: t("home.heroCtaShop"),
-        ctaHref: "/shop",
+        kind: "pair",
+        imageUrl: "/hero/pair-left.png",
+        imageUrl2: "/hero/pair-right.png",
+        href: "/shop",
+        motion1: "float",
+        speed1: 4,
+        animated1: true,
+        motion2: "sway",
+        speed2: 5,
+        animated2: true,
+        bgColor: "#f4efe9",
+      },
+      {
+        kind: "single",
+        imageUrl: "/hero/single.png",
+        imageUrl2: null,
+        href: "/shop",
+        motion1: "pulse",
+        speed1: 3,
+        animated1: true,
+        motion2: "float",
+        speed2: 4,
+        animated2: true,
+        bgColor: "#f4efe9",
       },
     ];
   }
@@ -74,8 +109,7 @@ export default async function HomePage({
       <SideProductSection
         title={c("home.newestTitle")}
         subtitle={c("home.newestSubtitle")}
-        sideUrl={img("home-side-1")}
-        sideAlt={alt("home-side-1")}
+        side={sideImage("home-side-1")}
         sidePosition="left"
         products={toCards(newest)}
         locale={locale}
@@ -86,8 +120,7 @@ export default async function HomePage({
       {featured.length > 0 && (
         <SideProductSection
           title={c("home.featuredTitle")}
-          sideUrl={img("home-side-2")}
-          sideAlt={alt("home-side-2")}
+          side={sideImage("home-side-2")}
           sidePosition="right"
           products={toCards(featured)}
           locale={locale}
@@ -97,8 +130,7 @@ export default async function HomePage({
       {discounted.length > 0 && (
         <SideProductSection
           title={c("home.discountedTitle")}
-          sideUrl={img("home-side-3")}
-          sideAlt={alt("home-side-3")}
+          side={sideImage("home-side-3")}
           sidePosition="left"
           products={toCards(discounted)}
           locale={locale}
@@ -108,11 +140,50 @@ export default async function HomePage({
   );
 }
 
+type SideImage = {
+  url: string;
+  alt: string;
+  animated: boolean;
+  motion: string;
+  speed: number;
+  bgColor: string | null;
+};
+
+function SideDecoration({
+  side,
+  maxWidth,
+}: {
+  side: SideImage;
+  maxWidth: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-block rounded-2xl",
+        heroMotionClassName(side.animated, side.motion),
+      )}
+      style={{
+        backgroundColor: side.bgColor ?? "transparent",
+        ...heroMotionInlineStyle(side.animated, side.motion, side.speed),
+      }}
+    >
+      <NextImage
+        src={side.url}
+        alt={side.alt}
+        aria-hidden={side.alt ? undefined : true}
+        width={300}
+        height={400}
+        className={cn("h-auto w-full object-contain", maxWidth)}
+        unoptimized={isRawImage(side.url)}
+      />
+    </span>
+  );
+}
+
 function SideProductSection({
   title,
   subtitle,
-  sideUrl,
-  sideAlt,
+  side,
   sidePosition,
   products,
   locale,
@@ -121,8 +192,7 @@ function SideProductSection({
 }: {
   title: string;
   subtitle?: string;
-  sideUrl: string | null;
-  sideAlt: string;
+  side: SideImage | null;
   sidePosition: "left" | "right";
   products: CardProduct[];
   locale: string;
@@ -131,17 +201,9 @@ function SideProductSection({
 }) {
   if (products.length === 0) return null;
 
-  const side = sideUrl ? (
+  const sideEl = side ? (
     <div className="relative hidden min-h-[20rem] items-center justify-center lg:flex">
-      <NextImage
-        src={sideUrl}
-        alt={sideAlt}
-        aria-hidden={sideAlt ? undefined : true}
-        width={300}
-        height={400}
-        className="h-auto w-full max-w-[300px] object-contain"
-        unoptimized={isRawImage(sideUrl)}
-      />
+      <SideDecoration side={side} maxWidth="max-w-[300px]" />
     </div>
   ) : null;
 
@@ -161,31 +223,23 @@ function SideProductSection({
         href={viewAllHref}
         linkLabel={viewAllLabel}
       />
-      {sideUrl && (
+      {side && (
         <div className="mb-6 flex justify-center lg:hidden">
-          <NextImage
-            src={sideUrl}
-            alt={sideAlt}
-            aria-hidden={sideAlt ? undefined : true}
-            width={300}
-            height={400}
-            className="h-auto w-full max-w-[220px] object-contain"
-            unoptimized={isRawImage(sideUrl)}
-          />
+          <SideDecoration side={side} maxWidth="max-w-[220px]" />
         </div>
       )}
       <div
         className={cn(
           "grid items-center gap-8 lg:gap-12",
-          sideUrl &&
+          side &&
             (sidePosition === "left"
               ? "lg:grid-cols-[280px_minmax(0,1fr)]"
               : "lg:grid-cols-[minmax(0,1fr)_280px]"),
         )}
       >
-        {sideUrl && sidePosition === "left" && side}
+        {side && sidePosition === "left" && sideEl}
         {grid}
-        {sideUrl && sidePosition === "right" && side}
+        {side && sidePosition === "right" && sideEl}
       </div>
     </section>
   );

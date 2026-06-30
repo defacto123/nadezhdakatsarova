@@ -334,6 +334,10 @@ export interface SiteImageInput {
   altEn: string | null;
   width: number;
   height: number;
+  animated: boolean;
+  motion: string; // float|sway|pulse|rock|drift
+  speed: number; // 1 (slow) .. 10 (fast)
+  bgColor: string | null; // background behind the image; null = transparent
 }
 
 export async function saveSiteImage(input: SiteImageInput) {
@@ -394,16 +398,18 @@ export async function setActiveFont(
 
 export interface HeroSlideInput {
   id?: string;
-  eyebrowBg: string | null;
-  eyebrowEn: string | null;
-  headlineBg: string | null;
-  headlineEn: string | null;
-  subtextBg: string | null;
-  subtextEn: string | null;
-  imageUrl: string | null;
-  ctaLabelBg: string | null;
-  ctaLabelEn: string | null;
-  ctaHref: string | null;
+  kind: string; // "single" | "pair"
+  imageUrl: string | null; // single image, or left-edge image of a pair
+  imageUrl2: string | null; // right-edge image (pair only)
+  href: string | null; // redirect URL for the slide
+  // Continuous motion per image (image 1 = single/left, image 2 = right).
+  motion1: string; // float|sway|pulse|rock|drift
+  speed1: number; // 1 (slow) .. 10 (fast)
+  animated1: boolean; // motion on/off for image 1
+  motion2: string;
+  speed2: number;
+  animated2: boolean; // motion on/off for image 2
+  bgColor: string | null; // band background colour; null = transparent
   sortOrder: number;
   active: boolean;
 }

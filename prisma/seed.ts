@@ -309,16 +309,44 @@ async function main() {
     h: number;
     seed: number;
     label?: string;
+    asset?: string; // explicit transparent PNG in /public (overrides placeholder)
+    animated?: boolean;
+    motion?: string;
+    speed?: number;
   }[] = [
     { slot: "logo", w: 480, h: 140, seed: 1, label: "Nadezhda" },
-    { slot: "home-side-1", w: 700, h: 900, seed: 7 },
-    { slot: "home-side-2", w: 700, h: 900, seed: 8 },
-    { slot: "home-side-3", w: 700, h: 900, seed: 9 },
-    { slot: "about-portrait", w: 1000, h: 1200, seed: 3 },
+    {
+      slot: "home-side-1",
+      w: 700,
+      h: 900,
+      seed: 7,
+      asset: "/decor/flowers.png",
+      animated: true,
+      motion: "float",
+      speed: 3,
+    },
+    { slot: "home-side-2", w: 700, h: 900, seed: 8, asset: "/decor/books.png" },
+    {
+      slot: "home-side-3",
+      w: 700,
+      h: 900,
+      seed: 9,
+      asset: "/decor/brushes.png",
+      animated: true,
+      motion: "sway",
+      speed: 3,
+    },
+    {
+      slot: "about-portrait",
+      w: 1000,
+      h: 1200,
+      seed: 3,
+      asset: "/decor/chair.png",
+    },
     { slot: "og-share", w: 1200, h: 630, seed: 4 },
   ];
   for (const s of slotImages) {
-    const url = placeholder(s.w, s.h, s.seed, s.label);
+    const url = s.asset ?? placeholder(s.w, s.h, s.seed, s.label);
     await prisma.siteImage.upsert({
       where: { slot: s.slot },
       // Only seed a placeholder when the slot is missing; never overwrite an
@@ -331,6 +359,10 @@ async function main() {
         height: s.h,
         altBg: null,
         altEn: null,
+        animated: s.animated ?? false,
+        motion: s.motion ?? "float",
+        speed: s.speed ?? 4,
+        bgColor: null,
       },
     });
   }
@@ -348,67 +380,50 @@ async function main() {
     });
   }
 
-  // Hero slides
+  // Hero slides — three demo sets: a sliding pair, a single fade-in banner, and
+  // another pair (non-floating). Placeholders live in /public/hero and ship
+  // with the app; replace them in the CMS.
   if ((await prisma.heroSlide.count()) === 0) {
     await prisma.heroSlide.createMany({
       data: [
         {
-          eyebrowBg: "Ръчно изработено · Лимитирано",
-          eyebrowEn: "Handmade · Limited",
-          headlineBg: "Изкуство, направено на ръка",
-          headlineEn: "Art made by hand",
-          subtextBg: "Ръчно рисувани илюстрации върху неща за всеки ден.",
-          subtextEn: "Hand-drawn illustrations on everyday things.",
-          imageUrl: placeholder(1600, 900, 11),
-          ctaLabelBg: "Към магазина",
-          ctaLabelEn: "Shop now",
-          ctaHref: "/shop",
+          kind: "pair",
+          imageUrl: "/hero/pair-left.png",
+          imageUrl2: "/hero/pair-right.png",
+          href: "/shop",
+          motion1: "float",
+          speed1: 4,
+          motion2: "sway",
+          speed2: 5,
+          bgColor: "#f4efe9",
           sortOrder: 0,
           active: true,
         },
         {
-          eyebrowBg: "Нова колекция",
-          eyebrowEn: "New collection",
-          headlineBg: "Малки радости за дома",
-          headlineEn: "Little joys for your home",
-          subtextBg: "Принтове, картички и още.",
-          subtextEn: "Prints, postcards and more.",
-          imageUrl: placeholder(1600, 900, 12),
-          ctaLabelBg: "Разгледай",
-          ctaLabelEn: "Explore",
-          ctaHref: "/shop",
+          kind: "single",
+          imageUrl: "/hero/single.png",
+          href: "/shop",
+          motion1: "pulse",
+          speed1: 3,
+          bgColor: null,
           sortOrder: 1,
           active: true,
         },
         {
-          eyebrowBg: "Намаления",
-          eyebrowEn: "On sale",
-          headlineBg: "До -20% този месец",
-          headlineEn: "Up to -20% this month",
-          subtextBg: "Любими модели на специална цена.",
-          subtextEn: "Favourites at a special price.",
-          imageUrl: placeholder(1600, 900, 13),
-          ctaLabelBg: "Виж офертите",
-          ctaLabelEn: "See offers",
-          ctaHref: "/shop",
+          kind: "pair",
+          imageUrl: "/hero/pair2-left.png",
+          imageUrl2: "/hero/pair2-right.png",
+          href: "/shop",
+          motion1: "rock",
+          speed1: 6,
+          motion2: "drift",
+          speed2: 4,
+          bgColor: "#eef0ec",
           sortOrder: 2,
           active: true,
         },
       ],
     });
-  } else {
-    // Backfill placeholder images for any slides that don't have one yet.
-    const slides = await prisma.heroSlide.findMany({
-      orderBy: { sortOrder: "asc" },
-    });
-    for (let i = 0; i < slides.length; i++) {
-      if (!slides[i].imageUrl) {
-        await prisma.heroSlide.update({
-          where: { id: slides[i].id },
-          data: { imageUrl: placeholder(1600, 900, 11 + i) },
-        });
-      }
-    }
   }
 
   // Social links

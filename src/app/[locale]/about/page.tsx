@@ -1,8 +1,13 @@
 import NextImage from "next/image";
 import { setRequestLocale } from "next-intl/server";
 import { getContentMap, getSiteImages } from "@/lib/site-settings";
-import { contentValue } from "@/lib/site-design";
+import {
+  contentValue,
+  heroMotionClassName,
+  heroMotionInlineStyle,
+} from "@/lib/site-design";
 import { pick } from "@/lib/content";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +44,20 @@ export default async function AboutPage({
         </div>
         <div className="order-1 md:order-2">
           {portrait ? (
-            <div className="relative aspect-[5/6] overflow-hidden rounded-3xl bg-sand">
+            <div
+              className={cn(
+                "relative aspect-[5/6] overflow-hidden rounded-3xl",
+                heroMotionClassName(portrait.animated, portrait.motion),
+              )}
+              style={{
+                backgroundColor: portrait.bgColor ?? "transparent",
+                ...heroMotionInlineStyle(
+                  portrait.animated,
+                  portrait.motion,
+                  portrait.speed,
+                ),
+              }}
+            >
               <NextImage
                 src={portrait.url}
                 alt={pick(locale, portrait.altBg, portrait.altEn) || c("about.title")}

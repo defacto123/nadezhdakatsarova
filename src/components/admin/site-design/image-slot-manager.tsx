@@ -4,11 +4,25 @@ import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/input";
-import { SITE_IMAGE_SLOTS, type ImageSlot } from "@/lib/site-design";
+import { Input, Label, Select } from "@/components/ui/input";
+import {
+  SITE_IMAGE_SLOTS,
+  HERO_MOTIONS,
+  HERO_SPEED,
+  heroMotionDuration,
+  type ImageSlot,
+} from "@/lib/site-design";
 import { saveSiteImage, deleteSiteImage } from "@/lib/admin-actions";
 
-type ImageRow = { url: string; altBg: string | null; altEn: string | null };
+export type ImageRow = {
+  url: string;
+  altBg: string | null;
+  altEn: string | null;
+  animated: boolean;
+  motion: string;
+  speed: number;
+  bgColor: string | null;
+};
 
 export function ImageSlotManager({
   images,
@@ -39,10 +53,20 @@ function SlotCard({
   );
   const [altBg, setAltBg] = useState(current?.altBg ?? "");
   const [altEn, setAltEn] = useState(current?.altEn ?? "");
+  const [animated, setAnimated] = useState(current?.animated ?? false);
+  const [motion, setMotion] = useState(current?.motion ?? "float");
+  const [speed, setSpeed] = useState(current?.speed ?? HERO_SPEED.default);
+  const [bgColor, setBgColor] = useState<string | null>(
+    current?.bgColor ?? null,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  // The social-share image is never rendered on a page, so animation/background
+  // controls would have no visible effect there.
+  const showMotion = slot.slot !== "og-share";
 
   async function upload() {
     setError(null);
@@ -89,6 +113,10 @@ function SlotCard({
         altEn: altEn || null,
         width: dims?.width ?? slot.width,
         height: dims?.height ?? slot.height,
+        animated,
+        motion,
+        speed,
+        bgColor,
       });
       setOk(true);
       router.refresh();
@@ -157,6 +185,71 @@ function SlotCard({
           <Input value={altEn} onChange={(e) => setAltEn(e.target.value)} />
         </div>
       </div>
+
+      {showMotion && (
+        <div className="mt-3 rounded-xl border border-border p-3">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={animated}
+              onChange={(e) => setAnimated(e.target.checked)}
+            />
+            Animated
+          </label>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label className="text-xs">Motion</Label>
+              <Select
+                value={motion}
+                disabled={!animated}
+                onChange={(e) => setMotion(e.target.value)}
+              >
+                {HERO_MOTIONS.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">
+                Speed: {speed} ({heroMotionDuration(speed)}s per loop)
+              </Label>
+              <input
+                type="range"
+                min={HERO_SPEED.min}
+                max={HERO_SPEED.max}
+                value={speed}
+                disabled={!animated}
+                onChange={(e) => setSpeed(Number(e.target.value))}
+                className="mt-2 w-full cursor-pointer accent-[#b76e5b] disabled:opacity-40"
+              />
+            </div>
+          </div>
+          <div className="mt-3">
+            <Label className="text-xs">Background</Label>
+            <div className="mt-1 flex items-center gap-3">
+              <input
+                type="color"
+                value={bgColor ?? "#f4efe9"}
+                disabled={bgColor === null}
+                onChange={(e) => setBgColor(e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded border border-border bg-white p-0.5 disabled:opacity-40"
+              />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={bgColor === null}
+                  onChange={(e) =>
+                    setBgColor(e.target.checked ? null : "#f4efe9")
+                  }
+                />
+                No background (transparent)
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 

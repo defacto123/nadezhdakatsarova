@@ -9,6 +9,7 @@ import {
   type ThemeValues,
 } from "@/lib/site-design";
 import { saveSiteTheme, type SiteThemeInput } from "@/lib/admin-actions";
+import { brushStyle } from "@/components/storefront/header";
 
 type FontOption = { id: string; label: string; family: string };
 
@@ -106,14 +107,11 @@ export function ThemeEditor({
           <div
             aria-hidden
             className="mb-4 h-[90px] w-full rounded-xl bg-muted"
-            style={{
-              backgroundImage: `url(${brushUrl})`,
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "100% 170px",
-              backgroundPosition: "center bottom",
-              opacity: values.brushOpacity / 100,
-              filter: `grayscale(1) sepia(1) saturate(${values.brushSaturate}%) hue-rotate(${values.brushHue}deg)`,
-            }}
+            style={brushStyle(brushUrl, {
+              hue: values.brushHue,
+              saturate: values.brushSaturate,
+              opacity: values.brushOpacity,
+            })}
           />
 
           <div className="grid gap-4 sm:grid-cols-3">
