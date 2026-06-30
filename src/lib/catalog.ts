@@ -1,6 +1,8 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import type { CardProduct } from "@/lib/types";
+import { CACHE_TAGS } from "@/lib/site-settings";
 
 export const productCardInclude = {
   images: { orderBy: { sortOrder: "asc" }, take: 2 },
@@ -58,12 +60,15 @@ export async function getCategories() {
   });
 }
 
-export async function getTopLevelCategories() {
-  return prisma.category.findMany({
-    where: { active: true, parentId: null },
-    orderBy: [{ sortOrder: "asc" }, { nameBg: "asc" }],
-  });
-}
+export const getTopLevelCategories = unstable_cache(
+  async () =>
+    prisma.category.findMany({
+      where: { active: true, parentId: null },
+      orderBy: [{ sortOrder: "asc" }, { nameBg: "asc" }],
+    }),
+  ["top-level-categories"],
+  { tags: [CACHE_TAGS.categories], revalidate: 3600 },
+);
 
 export async function getNewestProducts(take = 8) {
   return prisma.product.findMany({

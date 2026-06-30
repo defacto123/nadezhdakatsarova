@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { sendCampaign } from "@/lib/marketing";
+import { CACHE_TAGS } from "@/lib/site-settings";
 
 async function assertAdmin() {
   const session = await auth();
@@ -121,6 +122,8 @@ export async function saveCategory(input: CategoryInput) {
     await prisma.category.create({ data });
   }
   revalidatePath("/admin/categories");
+  revalidateTag(CACHE_TAGS.categories, { expire: 0 });
+  revalidatePath("/", "layout");
 }
 
 export async function deleteCategory(id: string) {
@@ -131,6 +134,8 @@ export async function deleteCategory(id: string) {
   }
   await prisma.category.delete({ where: { id } });
   revalidatePath("/admin/categories");
+  revalidateTag(CACHE_TAGS.categories, { expire: 0 });
+  revalidatePath("/", "layout");
 }
 
 export interface DiscountInput {
@@ -258,9 +263,18 @@ export async function sendCampaignNow(id: string) {
 // Site Design
 // ---------------------------------------------------------------------------
 
-/** Revalidate the whole storefront after a site-design change. */
+/**
+ * Revalidate the whole storefront after a site-design change. Busts both the
+ * full-route layout cache and the tagged data caches for the CMS-managed data
+ * read by the shared layout, so edits are reflected on the next request.
+ */
 function revalidateSite() {
   revalidatePath("/", "layout");
+  // expire: 0 -> invalidate immediately (read-your-own-writes) in Next 16.
+  revalidateTag(CACHE_TAGS.content, { expire: 0 });
+  revalidateTag(CACHE_TAGS.images, { expire: 0 });
+  revalidateTag(CACHE_TAGS.socials, { expire: 0 });
+  revalidateTag(CACHE_TAGS.theme, { expire: 0 });
 }
 
 export interface SiteThemeInput {
