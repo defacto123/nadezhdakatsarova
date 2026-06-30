@@ -24,6 +24,8 @@ export interface ThemeValues {
   brushSaturate: number;
   /** Header brush opacity as a percentage (0-100). */
   brushOpacity: number;
+  /** Total seconds for one full loop through all hero slides. */
+  heroCycleSeconds: number;
 }
 
 export const DEFAULT_THEME: ThemeValues = {
@@ -42,10 +44,22 @@ export const DEFAULT_THEME: ThemeValues = {
   brushHue: 0,
   brushSaturate: 100,
   brushOpacity: 75,
+  heroCycleSeconds: 24,
 };
 
+// Range for the hero carousel's total cycle-time slider (whole loop, seconds).
+export const HERO_CYCLE = { min: 4, max: 60, default: 24 } as const;
+
+// Theme keys that are plain colour strings (everything except the numeric /
+// non-colour settings). Used to type the colour editor so it never indexes
+// fields that don't live on SiteThemeInput (e.g. heroCycleSeconds).
+export type ThemeColorKey = Exclude<
+  keyof ThemeValues,
+  "radiusRem" | "brushHue" | "brushSaturate" | "brushOpacity" | "heroCycleSeconds"
+>;
+
 export interface ThemeColorField {
-  field: keyof ThemeValues;
+  field: ThemeColorKey;
   label: string;
   help: string;
 }
@@ -67,13 +81,7 @@ export const THEME_COLOR_FIELDS: ThemeColorField[] = [
 
 // Maps each theme colour field to the CSS custom properties it overrides.
 // Non-colour fields (radius + brush styling) are applied elsewhere.
-const THEME_VAR_MAP: Record<
-  keyof Omit<
-    ThemeValues,
-    "radiusRem" | "brushHue" | "brushSaturate" | "brushOpacity"
-  >,
-  string[]
-> = {
+const THEME_VAR_MAP: Record<ThemeColorKey, string[]> = {
   colorBackground: ["--color-cream", "--color-background"],
   colorForeground: ["--color-ink", "--color-foreground"],
   colorMutedText: ["--color-ink-soft", "--color-muted-foreground"],

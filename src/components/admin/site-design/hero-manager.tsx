@@ -10,11 +10,13 @@ import {
   HERO_PAIR_IMAGE,
   HERO_MOTIONS,
   HERO_SPEED,
+  HERO_CYCLE,
   heroMotionDuration,
 } from "@/lib/site-design";
 import {
   saveHeroSlide,
   deleteHeroSlide,
+  saveHeroSettings,
   type HeroSlideInput,
 } from "@/lib/admin-actions";
 
@@ -22,9 +24,16 @@ export type HeroSlideData = HeroSlideInput & { id: string };
 
 type Dims = { width: number; height: number };
 
-export function HeroManager({ slides }: { slides: HeroSlideData[] }) {
+export function HeroManager({
+  slides,
+  cycleSeconds,
+}: {
+  slides: HeroSlideData[];
+  cycleSeconds: number;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const activeCount = slides.filter((s) => s.active).length;
 
   function addSlide() {
     startTransition(async () => {
@@ -49,6 +58,7 @@ export function HeroManager({ slides }: { slides: HeroSlideData[] }) {
 
   return (
     <div className="space-y-5">
+      <CycleTimingCard cycleSeconds={cycleSeconds} activeCount={activeCount} />
       {slides.length === 0 && (
         <p className="text-sm text-muted-foreground">No slides yet.</p>
       )}
@@ -58,6 +68,72 @@ export function HeroManager({ slides }: { slides: HeroSlideData[] }) {
       <Button onClick={addSlide} disabled={pending}>
         + Add slide
       </Button>
+    </div>
+  );
+}
+
+/** Global slider for the whole carousel loop; per-slide time = cycle / count. */
+function CycleTimingCard({
+  cycleSeconds,
+  activeCount,
+}: {
+  cycleSeconds: number;
+  activeCount: number;
+}) {
+  const router = useRouter();
+  const [value, setValue] = useState(cycleSeconds);
+  const [pending, startTransition] = useTransition();
+  const [saved, setSaved] = useState(false);
+
+  const count = Math.max(1, activeCount);
+  const perSlide = value / count;
+
+  function save() {
+    startTransition(async () => {
+      await saveHeroSettings({ cycleSeconds: value });
+      setSaved(true);
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-white p-5">
+      <h2 className="text-sm font-semibold">Carousel timing</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Total time for one full loop through all slides. Each slide&apos;s
+        on-screen time adapts automatically to how many active slides you have.
+      </p>
+      <div className="mt-4">
+        <Label className="text-xs">
+          Total cycle: {value}s
+          {" — "}
+          <span className="text-sage-dark">
+            {perSlide.toFixed(1)}s per slide
+          </span>{" "}
+          ({count} active {count === 1 ? "slide" : "slides"})
+        </Label>
+        <input
+          type="range"
+          min={HERO_CYCLE.min}
+          max={HERO_CYCLE.max}
+          value={value}
+          onChange={(e) => {
+            setValue(Number(e.target.value));
+            setSaved(false);
+          }}
+          className="mt-2 w-full cursor-pointer accent-[#b76e5b]"
+        />
+        <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
+          <span>{HERO_CYCLE.min}s</span>
+          <span>{HERO_CYCLE.max}s</span>
+        </div>
+      </div>
+      <div className="mt-4 flex items-center gap-2">
+        <Button onClick={save} disabled={pending}>
+          Save timing
+        </Button>
+        {saved && <span className="text-sm text-sage-dark">Saved</span>}
+      </div>
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   getContentMap,
   getSiteImages,
   getHeroSlides,
+  getResolvedTheme,
 } from "@/lib/site-settings";
 import {
   contentValue,
@@ -33,7 +34,7 @@ export default async function HomePage({
   setRequestLocale(locale);
   const t = await getTranslations();
 
-  const [newest, featured, discounted, content, images, heroRows] =
+  const [newest, featured, discounted, content, images, heroRows, theme] =
     await Promise.all([
       getNewestProducts(6),
       getFeaturedProducts(6),
@@ -41,6 +42,7 @@ export default async function HomePage({
       getContentMap(),
       getSiteImages(),
       getHeroSlides(),
+      getResolvedTheme(),
     ]);
 
   const c = (key: string) => contentValue(content, key, locale);
@@ -104,7 +106,7 @@ export default async function HomePage({
 
   return (
     <div className="pb-10">
-      <HeroCarousel slides={heroSlides} />
+      <HeroCarousel slides={heroSlides} cycleSeconds={theme.heroCycleSeconds} />
 
       <SideProductSection
         title={c("home.newestTitle")}

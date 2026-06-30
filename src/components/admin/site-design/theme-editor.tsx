@@ -6,7 +6,7 @@ import { Label, Select } from "@/components/ui/input";
 import {
   THEME_COLOR_FIELDS,
   DEFAULT_THEME,
-  type ThemeValues,
+  type ThemeColorKey,
 } from "@/lib/site-design";
 import { saveSiteTheme, type SiteThemeInput } from "@/lib/admin-actions";
 import { brushStyle } from "@/components/storefront/header";
@@ -26,7 +26,7 @@ export function ThemeEditor({
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
-  function setColor(field: keyof ThemeValues, value: string) {
+  function setColor(field: ThemeColorKey, value: string) {
     setValues((v) => ({ ...v, [field]: value }));
     setSaved(false);
   }
@@ -47,7 +47,10 @@ export function ThemeEditor({
   }
 
   function reset() {
-    setValues((v) => ({ ...v, ...DEFAULT_THEME }));
+    // heroCycleSeconds is managed in the Hero CMS, not this theme form.
+    const { heroCycleSeconds, ...themeDefaults } = DEFAULT_THEME;
+    void heroCycleSeconds;
+    setValues((v) => ({ ...v, ...themeDefaults }));
     setSaved(false);
   }
 

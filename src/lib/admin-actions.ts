@@ -308,6 +308,22 @@ export async function saveSiteTheme(input: SiteThemeInput) {
   revalidateSite();
 }
 
+/**
+ * Global hero-carousel timing. Stored on the SiteTheme row but saved
+ * independently of the theme editor form so the two never clobber each other.
+ */
+export async function saveHeroSettings(input: { cycleSeconds: number }) {
+  await assertAdmin();
+  const cycleSeconds = Math.round(input.cycleSeconds);
+  await prisma.siteTheme.upsert({
+    where: { id: "default" },
+    update: { heroCycleSeconds: cycleSeconds },
+    create: { id: "default", heroCycleSeconds: cycleSeconds },
+  });
+  revalidatePath("/admin/site-design/hero");
+  revalidateSite();
+}
+
 export interface ContentBlockInput {
   key: string;
   valueBg: string;

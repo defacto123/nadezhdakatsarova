@@ -332,6 +332,9 @@ model SiteTheme {
   brushHue            Int        @default(0)
   brushSaturate       Int        @default(100)
   brushOpacity        Int        @default(75)
+  // Total seconds for one full loop through all hero slides. Each slide's
+  // on-screen time is heroCycleSeconds / number-of-slides.
+  heroCycleSeconds    Int        @default(24)
   bodyFontId          String?
   bodyFont           FontAsset? @relation("BodyFont", fields: [bodyFontId], references: [id], onDelete: SetNull)
   headingFontId       String?
