@@ -24,6 +24,8 @@ export interface ThemeValues {
   brushSaturate: number;
   /** Header brush opacity as a percentage (0-100). */
   brushOpacity: number;
+  /** Total seconds for one full loop through all hero slides. */
+  heroCycleSeconds: number;
 }
 
 export const DEFAULT_THEME: ThemeValues = {
@@ -42,7 +44,11 @@ export const DEFAULT_THEME: ThemeValues = {
   brushHue: 0,
   brushSaturate: 100,
   brushOpacity: 75,
+  heroCycleSeconds: 24,
 };
+
+// Range for the hero carousel's total cycle-time slider (whole loop, seconds).
+export const HERO_CYCLE = { min: 4, max: 60, default: 24 } as const;
 
 export interface ThemeColorField {
   field: keyof ThemeValues;
@@ -70,7 +76,11 @@ export const THEME_COLOR_FIELDS: ThemeColorField[] = [
 const THEME_VAR_MAP: Record<
   keyof Omit<
     ThemeValues,
-    "radiusRem" | "brushHue" | "brushSaturate" | "brushOpacity"
+    | "radiusRem"
+    | "brushHue"
+    | "brushSaturate"
+    | "brushOpacity"
+    | "heroCycleSeconds"
   >,
   string[]
 > = {

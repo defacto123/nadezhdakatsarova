@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { HERO_CYCLE } from "@/lib/site-design";
 import {
   HeroManager,
   type HeroSlideData,
@@ -7,7 +8,11 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function HeroPage() {
-  const rows = await prisma.heroSlide.findMany({ orderBy: { sortOrder: "asc" } });
+  const [rows, theme] = await Promise.all([
+    prisma.heroSlide.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.siteTheme.findUnique({ where: { id: "default" } }),
+  ]);
+  const cycleSeconds = theme?.heroCycleSeconds ?? HERO_CYCLE.default;
   const slides: HeroSlideData[] = rows.map((r) => ({
     id: r.id,
     kind: r.kind,
@@ -34,7 +39,7 @@ export default async function HeroPage() {
         the centre. Images are clickable and redirect to the URL you set.
       </p>
       <div className="mt-8">
-        <HeroManager slides={slides} />
+        <HeroManager slides={slides} cycleSeconds={cycleSeconds} />
       </div>
     </div>
   );

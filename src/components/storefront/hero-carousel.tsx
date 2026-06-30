@@ -27,15 +27,25 @@ export type HeroSlideView = {
 // Motion starts after the entrance (slide-in/fade) finishes.
 const ENTRANCE_DELAY = 0.9;
 
-export function HeroCarousel({ slides }: { slides: HeroSlideView[] }) {
+export function HeroCarousel({
+  slides,
+  cycleSeconds = 24,
+}: {
+  slides: HeroSlideView[];
+  /** Total seconds for one full loop; each slide shows for cycle / count. */
+  cycleSeconds?: number;
+}) {
   const [index, setIndex] = useState(0);
   const count = slides.length;
 
   useEffect(() => {
     if (count <= 1) return;
-    const id = setInterval(() => setIndex((i) => (i + 1) % count), 6000);
+    // Per-slide time scales with the slide count so the whole loop always
+    // takes cycleSeconds. Clamp so a single fast cycle never flickers.
+    const perSlideMs = Math.max(1500, (cycleSeconds * 1000) / count);
+    const id = setInterval(() => setIndex((i) => (i + 1) % count), perSlideMs);
     return () => clearInterval(id);
-  }, [count]);
+  }, [count, cycleSeconds]);
 
   if (count === 0) return null;
   const safeIndex = index % count;
