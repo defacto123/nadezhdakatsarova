@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ export function ProductDetail({
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [added, setAdded] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
 
   const hasVariants = product.variants.length > 0;
 
@@ -100,6 +102,29 @@ export function ProductDetail({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const imageCount = images.length;
+  const showPrev = () =>
+    setActiveImage((i) => (i - 1 + imageCount) % imageCount);
+  const showNext = () => setActiveImage((i) => (i + 1) % imageCount);
+
+  // Keyboard controls + scroll lock while the zoomed image modal is open.
+  useEffect(() => {
+    if (!lightbox) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setLightbox(false);
+      else if (e.key === "ArrowRight") showNext();
+      else if (e.key === "ArrowLeft") showPrev();
+    }
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightbox, imageCount]);
+
   function add() {
     if (soldOut) return;
     addItem(
@@ -127,23 +152,29 @@ export function ProductDetail({
   }
 
   return (
+    <>
     <div className="grid gap-10 lg:grid-cols-2">
       {/* Gallery */}
       <div className="flex flex-col gap-4">
-        <div className="relative aspect-square overflow-hidden rounded-3xl bg-sand">
+        <button
+          type="button"
+          onClick={() => setLightbox(true)}
+          aria-label={t("zoomImage")}
+          className="group relative aspect-square cursor-zoom-in overflow-hidden rounded-3xl bg-sand"
+        >
           <Image
             src={images[activeImage].url}
             alt={images[activeImage].alt ?? title}
             fill
             sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             priority
             unoptimized={isRawImage(images[activeImage].url)}
           />
           <div className="absolute left-4 top-4 flex flex-col gap-2">
             {onSale && <Badge variant="sale">-{product.salePercent}%</Badge>}
           </div>
-        </div>
+        </button>
         {images.length > 1 && (
           <div className="flex gap-3">
             {images.map((img, i) => (
@@ -278,5 +309,86 @@ export function ProductDetail({
         )}
       </div>
     </div>
+
+    {lightbox && (
+      <div
+        className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4"
+        onClick={() => setLightbox(false)}
+        role="dialog"
+        aria-modal="true"
+      >
+        <button
+          type="button"
+          onClick={() => setLightbox(false)}
+          aria-label={t("close")}
+          className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+        >
+          <X className="h-6 w-6" />
+        </button>
+
+        {imageCount > 1 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              showPrev();
+            }}
+            aria-label={t("previous")}
+            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 sm:left-4"
+          >
+            <ChevronLeft className="h-7 w-7" />
+          </button>
+        )}
+
+        <div
+          className="relative h-full max-h-[85vh] w-full max-w-5xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Image
+            src={images[activeImage].url}
+            alt={images[activeImage].alt ?? title}
+            fill
+            sizes="100vw"
+            className="object-contain"
+            unoptimized={isRawImage(images[activeImage].url)}
+          />
+        </div>
+
+        {imageCount > 1 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              showNext();
+            }}
+            aria-label={t("next")}
+            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 sm:right-4"
+          >
+            <ChevronRight className="h-7 w-7" />
+          </button>
+        )}
+
+        {imageCount > 1 && (
+          <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`${t("image")} ${i + 1}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveImage(i);
+                }}
+                className={cn(
+                  "h-2 rounded-full transition-all",
+                  i === activeImage ? "w-6 bg-white" : "w-2 bg-white/50",
+                )}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    )}
+    </>
   );
 }

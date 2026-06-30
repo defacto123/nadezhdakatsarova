@@ -179,6 +179,10 @@ export function imageSlot(slot: string): ImageSlot | undefined {
 // the hero uploader.
 export const HERO_IMAGE = { width: 1600, height: 600 } as const;
 
+// Recommended size for product images. They are displayed in square frames
+// (object-cover), so a 1:1 image avoids cropping. Shown in the product form.
+export const PRODUCT_IMAGE = { width: 1200, height: 1200 } as const;
+
 // ---------------------------------------------------------------------------
 // Editable static content registry (bilingual)
 // ---------------------------------------------------------------------------
