@@ -1,5 +1,4 @@
 name: Seed production database
-# Manual workflow_dispatch. (Re-saved so GitHub registers the dispatch trigger.)
 
 # Manually-triggered, idempotent seed of the production database via the
 # Cloud SQL Auth Proxy. The seed only creates missing rows (products are
@@ -18,6 +17,10 @@ on:
         description: 'Type SEED to confirm seeding the PRODUCTION database'
         required: true
         default: ""
+      create_admin:
+        description: 'Create/ensure the admin from SEED_ADMIN_* secrets (true/false)'
+        required: false
+        default: "false"
 
 jobs:
   seed:
@@ -50,9 +53,10 @@ jobs:
       - name: Seed via Cloud SQL Auth Proxy
         env:
           DATABASE_URL: ${{ secrets.MIGRATIONS_DATABASE_URL }}
-          # Don't create the default admin on production. To seed a real admin,
-          # set SEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD secrets and set this to 0.
-          SEED_SKIP_ADMIN: "1"
+          # Admin is only created when the run is dispatched with create_admin=true
+          # (and the SEED_ADMIN_* secrets are set). Otherwise it is skipped so the
+          # insecure default admin is never created on production.
+          SEED_SKIP_ADMIN: ${{ github.event.inputs.create_admin == 'true' && '0' || '1' }}
           SEED_ADMIN_EMAIL: ${{ secrets.SEED_ADMIN_EMAIL }}
           SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
         run: |
