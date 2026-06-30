@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Label } from "@/components/ui/input";
+import { HERO_IMAGE } from "@/lib/site-design";
 import {
   saveHeroSlide,
   deleteHeroSlide,
@@ -59,6 +60,10 @@ function SlideCard({ slide }: { slide: HeroSlideData }) {
   const [busy, setBusy] = useState(false);
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dims, setDims] = useState<{ width: number; height: number } | null>(
+    null,
+  );
 
   function field<K extends keyof HeroSlideData>(key: K, val: HeroSlideData[K]) {
     setS((p) => ({ ...p, [key]: val }));
@@ -66,8 +71,12 @@ function SlideCard({ slide }: { slide: HeroSlideData }) {
   }
 
   async function uploadImage() {
+    setError(null);
     const file = fileRef.current?.files?.[0];
-    if (!file) return;
+    if (!file) {
+      setError("Choose an image first.");
+      return;
+    }
     setBusy(true);
     try {
       const fd = new FormData();
@@ -75,7 +84,25 @@ function SlideCard({ slide }: { slide: HeroSlideData }) {
       fd.append("folder", "hero");
       const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
       const json = await res.json();
-      if (res.ok) field("imageUrl", json.url);
+      if (!res.ok) {
+        setError(json.error ?? "Upload failed.");
+        return;
+      }
+      const next = { ...s, imageUrl: json.url as string };
+      setS(next);
+      if (typeof json.width === "number" && typeof json.height === "number") {
+        setDims({ width: json.width, height: json.height });
+      }
+      if (fileRef.current) fileRef.current.value = "";
+      // Persist immediately so the uploaded image isn't lost if the admin
+      // forgets to press "Save slide".
+      startTransition(async () => {
+        await saveHeroSlide(next);
+        setSaved(true);
+        router.refresh();
+      });
+    } catch {
+      setError("Upload failed.");
     } finally {
       setBusy(false);
     }
@@ -138,9 +165,29 @@ function SlideCard({ slide }: { slide: HeroSlideData }) {
         )}
         <div>
           <input ref={fileRef} type="file" accept="image/*" className="block text-sm" />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Recommended size: {HERO_IMAGE.width}×{HERO_IMAGE.height}px
+            (landscape, fills the full banner width).
+          </p>
+          {dims && (
+            <p
+              className={
+                dims.width === HERO_IMAGE.width &&
+                dims.height === HERO_IMAGE.height
+                  ? "mt-1 text-xs text-sage-dark"
+                  : "mt-1 text-xs text-amber-600"
+              }
+            >
+              Uploaded: {dims.width}×{dims.height}px
+              {(dims.width !== HERO_IMAGE.width ||
+                dims.height !== HERO_IMAGE.height) &&
+                ` — differs from the recommended ${HERO_IMAGE.width}×${HERO_IMAGE.height}px; it will still be used but may be cropped.`}
+            </p>
+          )}
           <Button variant="outline" className="mt-2" onClick={uploadImage} disabled={busy}>
             {busy ? "Uploading..." : "Upload image"}
           </Button>
+          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input

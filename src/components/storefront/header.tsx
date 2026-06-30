@@ -18,7 +18,7 @@ type Logo = { url: string; alt: string } | null;
 function Logotype({ logo, brand }: { logo: Logo; brand: Brand }) {
   if (logo) {
     return (
-      <span className="relative block h-11 w-36">
+      <span className="relative block h-14 w-48 md:h-16 md:w-56">
         <NextImage
           src={logo.url}
           alt={logo.alt || brand.line1}
@@ -37,21 +37,32 @@ function Logotype({ logo, brand }: { logo: Logo; brand: Brand }) {
   );
 }
 
-function HeaderBrush({ brushUrl }: { brushUrl: string | null }) {
+type BrushStyle = { hue: number; saturate: number; opacity: number };
+
+function HeaderBrush({
+  brushUrl,
+  brush,
+}: {
+  brushUrl: string | null;
+  brush: BrushStyle;
+}) {
   if (!brushUrl) return null;
   // Full-width wavy stroke. The band is taller than the header and is NOT
   // clipped, so the complete ribbon — both wavy edges — is visible and its
   // lower wavy edge spills below the header onto the hero, exactly like the
-  // reference site. Kept light via opacity so the menu text stays readable.
+  // reference site. Opacity / saturation / hue are CMS-controlled so the menu
+  // text stays readable and the colour can be tuned.
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[85px] opacity-75"
+      className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[85px]"
       style={{
         backgroundImage: `url(${brushUrl})`,
         backgroundRepeat: "no-repeat",
         backgroundSize: "100% 170px",
         backgroundPosition: "center bottom",
+        opacity: brush.opacity / 100,
+        filter: `saturate(${brush.saturate}%) hue-rotate(${brush.hue}deg)`,
       }}
     />
   );
@@ -63,12 +74,14 @@ export function Header({
   brand,
   logo,
   brushUrl = null,
+  brush = { hue: 0, saturate: 100, opacity: 75 },
 }: {
   locale: string;
   categories: Cat[];
   brand: Brand;
   logo: Logo;
   brushUrl?: string | null;
+  brush?: BrushStyle;
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
@@ -77,7 +90,7 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-40 bg-background">
-      <HeaderBrush brushUrl={brushUrl} />
+      <HeaderBrush brushUrl={brushUrl} brush={brush} />
       <div className="container-page relative z-10 flex h-20 items-center justify-between gap-6">
         {/* Left: mobile menu + logo */}
         <div className="flex items-center gap-3">

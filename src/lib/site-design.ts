@@ -18,6 +18,12 @@ export interface ThemeValues {
   colorBorder: string;
   colorSale: string;
   radiusRem: number;
+  /** Header brush hue rotation in degrees (0-360). */
+  brushHue: number;
+  /** Header brush saturation as a percentage (0-200, 100 = original). */
+  brushSaturate: number;
+  /** Header brush opacity as a percentage (0-100). */
+  brushOpacity: number;
 }
 
 export const DEFAULT_THEME: ThemeValues = {
@@ -33,6 +39,9 @@ export const DEFAULT_THEME: ThemeValues = {
   colorBorder: "#ece5db",
   colorSale: "#c4633f",
   radiusRem: 0.6,
+  brushHue: 0,
+  brushSaturate: 100,
+  brushOpacity: 75,
 };
 
 export interface ThemeColorField {
@@ -57,7 +66,14 @@ export const THEME_COLOR_FIELDS: ThemeColorField[] = [
 ];
 
 // Maps each theme colour field to the CSS custom properties it overrides.
-const THEME_VAR_MAP: Record<keyof Omit<ThemeValues, "radiusRem">, string[]> = {
+// Non-colour fields (radius + brush styling) are applied elsewhere.
+const THEME_VAR_MAP: Record<
+  keyof Omit<
+    ThemeValues,
+    "radiusRem" | "brushHue" | "brushSaturate" | "brushOpacity"
+  >,
+  string[]
+> = {
   colorBackground: ["--color-cream", "--color-background"],
   colorForeground: ["--color-ink", "--color-foreground"],
   colorMutedText: ["--color-ink-soft", "--color-muted-foreground"],
@@ -115,22 +131,6 @@ export const SITE_IMAGE_SLOTS: ImageSlot[] = [
     height: 200,
   },
   {
-    slot: "home-hero-art",
-    label: "Homepage hero illustration",
-    description:
-      "Main illustration on the right of the homepage hero (the character / greeting). Transparent PNG recommended.",
-    width: 900,
-    height: 1100,
-  },
-  {
-    slot: "home-hero-brush",
-    label: "Homepage hero brush stroke",
-    description:
-      "Decorative watercolor brush stroke on the left of the hero. Transparent PNG recommended.",
-    width: 700,
-    height: 260,
-  },
-  {
     slot: "home-side-1",
     label: "Homepage decoration · New arrivals",
     description:
@@ -173,6 +173,11 @@ export const SITE_IMAGE_SLOTS: ImageSlot[] = [
 export function imageSlot(slot: string): ImageSlot | undefined {
   return SITE_IMAGE_SLOTS.find((s) => s.slot === slot);
 }
+
+// Recommended size for hero carousel slide images. These are full-bleed and
+// responsive, so this is a recommendation (not a hard-enforced slot) shown in
+// the hero uploader.
+export const HERO_IMAGE = { width: 1600, height: 600 } as const;
 
 // ---------------------------------------------------------------------------
 // Editable static content registry (bilingual)

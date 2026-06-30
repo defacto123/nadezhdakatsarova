@@ -49,7 +49,7 @@ export default async function HomePage({
     eyebrow: pick(locale, s.eyebrowBg, s.eyebrowEn) || null,
     headline: pick(locale, s.headlineBg, s.headlineEn) || null,
     subtext: pick(locale, s.subtextBg, s.subtextEn) || null,
-    imageUrl: s.imageUrl ?? img("home-hero-art"),
+    imageUrl: s.imageUrl ?? null,
     ctaLabel: pick(locale, s.ctaLabelBg, s.ctaLabelEn) || null,
     ctaHref: s.ctaHref || null,
   }));
@@ -60,7 +60,7 @@ export default async function HomePage({
         eyebrow: null,
         headline: t("site.name"),
         subtext: c("brand.tagline"),
-        imageUrl: img("home-hero-art"),
+        imageUrl: null,
         ctaLabel: t("home.heroCtaShop"),
         ctaHref: "/shop",
       },
@@ -161,6 +161,19 @@ function SideProductSection({
         href={viewAllHref}
         linkLabel={viewAllLabel}
       />
+      {sideUrl && (
+        <div className="mb-6 flex justify-center lg:hidden">
+          <NextImage
+            src={sideUrl}
+            alt={sideAlt}
+            aria-hidden={sideAlt ? undefined : true}
+            width={300}
+            height={400}
+            className="h-auto w-full max-w-[220px] object-contain"
+            unoptimized={isRawImage(sideUrl)}
+          />
+        </div>
+      )}
       <div
         className={cn(
           "grid items-center gap-8 lg:gap-12",

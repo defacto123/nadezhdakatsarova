@@ -12,7 +12,7 @@ export default async function AdminLayout({
   const session = await requireAdmin();
 
   return (
-    <div className="flex min-h-screen bg-cream">
+    <div className="cms-default-fonts flex min-h-screen bg-cream">
       <aside className="hidden w-60 shrink-0 border-r border-border bg-white p-5 md:block">
         <Link href="/admin" className="heading-display text-lg font-semibold">
           Boutique CMS

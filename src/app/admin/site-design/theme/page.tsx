@@ -6,9 +6,10 @@ import type { SiteThemeInput } from "@/lib/admin-actions";
 export const dynamic = "force-dynamic";
 
 export default async function ThemePage() {
-  const [row, fonts] = await Promise.all([
+  const [row, fonts, brush] = await Promise.all([
     prisma.siteTheme.findUnique({ where: { id: "default" } }),
     prisma.fontAsset.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.siteImage.findUnique({ where: { slot: "header-brush" } }),
   ]);
 
   const initial: SiteThemeInput = {
@@ -25,9 +26,14 @@ export default async function ThemePage() {
     colorBorder: row?.colorBorder ?? DEFAULT_THEME.colorBorder,
     colorSale: row?.colorSale ?? DEFAULT_THEME.colorSale,
     radiusRem: row?.radiusRem ?? DEFAULT_THEME.radiusRem,
+    brushHue: row?.brushHue ?? DEFAULT_THEME.brushHue,
+    brushSaturate: row?.brushSaturate ?? DEFAULT_THEME.brushSaturate,
+    brushOpacity: row?.brushOpacity ?? DEFAULT_THEME.brushOpacity,
     bodyFontId: row?.bodyFontId ?? null,
     headingFontId: row?.headingFontId ?? null,
   };
+
+  const brushUrl = brush?.url ?? "/brand/header-brush.png";
 
   return (
     <div>
@@ -40,6 +46,7 @@ export default async function ThemePage() {
         <ThemeEditor
           initial={initial}
           fonts={fonts.map((f) => ({ id: f.id, label: f.label, family: f.family }))}
+          brushUrl={brushUrl}
         />
       </div>
     </div>

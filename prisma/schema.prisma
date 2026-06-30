@@ -329,6 +329,9 @@ model SiteTheme {
   colorBorder         String     @default("#e6dccb")
   colorSale           String     @default("#c4633f")
   radiusRem           Float      @default(0.85)
+  brushHue            Int        @default(0)
+  brushSaturate       Int        @default(100)
+  brushOpacity        Int        @default(75)
   bodyFontId          String?
   bodyFont           FontAsset? @relation("BodyFont", fields: [bodyFontId], references: [id], onDelete: SetNull)
   headingFontId       String?
