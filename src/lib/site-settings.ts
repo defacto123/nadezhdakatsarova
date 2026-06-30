@@ -57,6 +57,9 @@ export const getResolvedTheme = cache(async (): Promise<ResolvedTheme> => {
       colorBorder: theme.colorBorder,
       colorSale: theme.colorSale,
       radiusRem: theme.radiusRem,
+      brushHue: theme.brushHue,
+      brushSaturate: theme.brushSaturate,
+      brushOpacity: theme.brushOpacity,
       bodyFont: theme.bodyFont
         ? {
             family: theme.bodyFont.family,

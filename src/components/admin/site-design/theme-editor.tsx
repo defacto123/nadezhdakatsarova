@@ -15,15 +15,25 @@ type FontOption = { id: string; label: string; family: string };
 export function ThemeEditor({
   initial,
   fonts,
+  brushUrl,
 }: {
   initial: SiteThemeInput;
   fonts: FontOption[];
+  brushUrl: string;
 }) {
   const [values, setValues] = useState<SiteThemeInput>(initial);
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
   function setColor(field: keyof ThemeValues, value: string) {
+    setValues((v) => ({ ...v, [field]: value }));
+    setSaved(false);
+  }
+
+  function setBrush(
+    field: "brushHue" | "brushSaturate" | "brushOpacity",
+    value: number,
+  ) {
     setValues((v) => ({ ...v, [field]: value }));
     setSaved(false);
   }
@@ -84,6 +94,72 @@ export function ThemeEditor({
             }}
             className="w-full"
           />
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-border bg-white p-4">
+          <Label className="mb-1">Header brush stroke</Label>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Adjust the painted brush band shown at the top of the site. Change
+            the upload itself in the Images tab.
+          </p>
+
+          <div
+            aria-hidden
+            className="mb-4 h-[90px] w-full rounded-xl bg-muted"
+            style={{
+              backgroundImage: `url(${brushUrl})`,
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "100% 170px",
+              backgroundPosition: "center bottom",
+              opacity: values.brushOpacity / 100,
+              filter: `saturate(${values.brushSaturate}%) hue-rotate(${values.brushHue}deg)`,
+            }}
+          />
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <Label className="mb-1 text-xs">
+                Opacity: {values.brushOpacity}%
+              </Label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={values.brushOpacity}
+                onChange={(e) => setBrush("brushOpacity", Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-1 text-xs">
+                Saturation: {values.brushSaturate}%
+              </Label>
+              <input
+                type="range"
+                min={0}
+                max={200}
+                step={1}
+                value={values.brushSaturate}
+                onChange={(e) =>
+                  setBrush("brushSaturate", Number(e.target.value))
+                }
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-1 text-xs">Colour (hue): {values.brushHue}°</Label>
+              <input
+                type="range"
+                min={0}
+                max={360}
+                step={1}
+                value={values.brushHue}
+                onChange={(e) => setBrush("brushHue", Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
