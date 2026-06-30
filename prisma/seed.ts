@@ -161,7 +161,8 @@ async function main() {
         passwordHash: await bcrypt.hash(adminPassword, 10),
       },
     });
-    console.log(`Admin: ${adminEmail} / ${adminPassword}`);
+    // Avoid printing the password to CI logs; the email is enough to confirm.
+    console.log(`Admin ready: ${adminEmail}`);
   }
 
   // Categories + 5 products each
