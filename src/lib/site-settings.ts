@@ -9,6 +9,7 @@ import {
 } from "@/lib/site-design";
 
 export interface ActiveFont {
+  id: string;
   family: string;
   url: string;
   format: string;
@@ -62,6 +63,7 @@ export const getResolvedTheme = cache(async (): Promise<ResolvedTheme> => {
       brushOpacity: theme.brushOpacity,
       bodyFont: theme.bodyFont
         ? {
+            id: theme.bodyFont.id,
             family: theme.bodyFont.family,
             url: theme.bodyFont.url,
             format: fontFormat(theme.bodyFont),
@@ -69,6 +71,7 @@ export const getResolvedTheme = cache(async (): Promise<ResolvedTheme> => {
         : null,
       headingFont: theme.headingFont
         ? {
+            id: theme.headingFont.id,
             family: theme.headingFont.family,
             url: theme.headingFont.url,
             format: fontFormat(theme.headingFont),
@@ -135,7 +138,6 @@ export const getSocialLinks = cache(async () => {
 });
 
 const safeFamily = (s: string) => s.replace(/['"\\]/g, "").trim();
-const safeUrl = (s: string) => s.replace(/['")]/g, "");
 
 /** Build the runtime CSS (font-faces + :root variables) for a resolved theme. */
 export function buildThemeCss(theme: ResolvedTheme): string {
@@ -145,7 +147,7 @@ export function buildThemeCss(theme: ResolvedTheme): string {
   if (theme.bodyFont) {
     const fam = safeFamily(theme.bodyFont.family);
     parts.push(
-      `@font-face{font-family:'${fam}';src:url('${safeUrl(theme.bodyFont.url)}') format('${theme.bodyFont.format}');font-display:swap;}`,
+      `@font-face{font-family:'${fam}';src:url('/api/fonts/${theme.bodyFont.id}') format('${theme.bodyFont.format}');font-display:swap;}`,
     );
     rootVars.push(
       `--font-sans: '${fam}', var(--font-inter), system-ui, sans-serif;`,
@@ -154,7 +156,7 @@ export function buildThemeCss(theme: ResolvedTheme): string {
   if (theme.headingFont) {
     const fam = safeFamily(theme.headingFont.family);
     parts.push(
-      `@font-face{font-family:'${fam}';src:url('${safeUrl(theme.headingFont.url)}') format('${theme.headingFont.format}');font-display:swap;}`,
+      `@font-face{font-family:'${fam}';src:url('/api/fonts/${theme.headingFont.id}') format('${theme.headingFont.format}');font-display:swap;}`,
     );
     rootVars.push(
       `--font-display: '${fam}', var(--font-fraunces), Georgia, serif;`,

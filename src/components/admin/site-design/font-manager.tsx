@@ -100,10 +100,12 @@ export function FontManager({
   }
 
   // @font-face declarations so previews render in the actual uploaded fonts.
+  // Served via the same-origin /api/fonts proxy to avoid cross-origin font
+  // (CORS) blocking when the file lives on GCS.
   const faceCss = fonts
     .map(
       (f) =>
-        `@font-face{font-family:'${f.family.replace(/['"\\]/g, "")}';src:url('${f.url}') format('${SRC_FORMAT[f.format] ?? f.format}');font-display:swap;}`,
+        `@font-face{font-family:'${f.family.replace(/['"\\]/g, "")}';src:url('/api/fonts/${f.id}') format('${SRC_FORMAT[f.format] ?? f.format}');font-display:swap;}`,
     )
     .join("\n");
 
