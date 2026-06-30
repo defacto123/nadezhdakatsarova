@@ -112,7 +112,7 @@ export function ThemeEditor({
               backgroundSize: "100% 170px",
               backgroundPosition: "center bottom",
               opacity: values.brushOpacity / 100,
-              filter: `saturate(${values.brushSaturate}%) hue-rotate(${values.brushHue}deg)`,
+              filter: `grayscale(1) sepia(1) saturate(${values.brushSaturate}%) hue-rotate(${values.brushHue}deg)`,
             }}
           />
 
@@ -138,8 +138,8 @@ export function ThemeEditor({
               <input
                 type="range"
                 min={0}
-                max={200}
-                step={1}
+                max={500}
+                step={5}
                 value={values.brushSaturate}
                 onChange={(e) =>
                   setBrush("brushSaturate", Number(e.target.value))
