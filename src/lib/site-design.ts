@@ -179,6 +179,64 @@ export function imageSlot(slot: string): ImageSlot | undefined {
 // the hero uploader.
 export const HERO_IMAGE = { width: 1600, height: 600 } as const;
 
+// Recommended size for the two-image "pair" hero slides. These are transparent
+// PNGs (a character/object on each side) that slide in from the edges and meet
+// in the centre, so a portrait transparent PNG works best. Shown in the CMS.
+export const HERO_PAIR_IMAGE = { width: 700, height: 900 } as const;
+
+// Continuous per-image motion patterns. Shared by the CMS (dropdown) and the
+// storefront (CSS class lookup). The on/off switch is a separate "animated"
+// boolean, so there is no "none" entry here.
+export const HERO_MOTIONS = [
+  { value: "float", label: "Float (up & down)" },
+  { value: "sway", label: "Sway (left & right)" },
+  { value: "pulse", label: "Pulse (gentle zoom)" },
+  { value: "rock", label: "Rock (tilt back & forth)" },
+  { value: "drift", label: "Drift (diagonal)" },
+] as const;
+
+export type HeroMotion = (typeof HERO_MOTIONS)[number]["value"];
+
+// Speed slider bounds (1 = slow, 10 = fast). Mapped to an animation duration
+// in the carousel via heroMotionDuration().
+export const HERO_SPEED = { min: 1, max: 10, default: 4 } as const;
+
+const HERO_MOTION_CLASS: Record<string, string> = {
+  float: "hero-motion-float",
+  sway: "hero-motion-sway",
+  pulse: "hero-motion-pulse",
+  rock: "hero-motion-rock",
+  drift: "hero-motion-drift",
+};
+
+// Map a 1..10 speed to a CSS animation duration in seconds (slow → fast).
+export function heroMotionDuration(speed: number): number {
+  const s = Math.min(HERO_SPEED.max, Math.max(HERO_SPEED.min, speed));
+  // speed 1 → ~9s, speed 10 → ~1.8s
+  return Math.round((9 - (s - 1) * 0.8) * 10) / 10;
+}
+
+// The CSS class that drives a given motion, or "" when not animated/unknown.
+export function heroMotionClassName(animated: boolean, motion: string): string {
+  if (!animated) return "";
+  return HERO_MOTION_CLASS[motion] ?? "";
+}
+
+// Inline style (duration + optional start delay) to pair with the motion class.
+export function heroMotionInlineStyle(
+  animated: boolean,
+  motion: string,
+  speed: number,
+  delaySeconds = 0,
+): import("react").CSSProperties | undefined {
+  if (!animated || !HERO_MOTION_CLASS[motion]) return undefined;
+  const style: import("react").CSSProperties = {
+    animationDuration: `${heroMotionDuration(speed)}s`,
+  };
+  if (delaySeconds) style.animationDelay = `${delaySeconds}s`;
+  return style;
+}
+
 // Recommended size for product images. They are displayed in square frames
 // (object-cover), so a 1:1 image avoids cropping. Shown in the product form.
 export const PRODUCT_IMAGE = { width: 1200, height: 1200 } as const;

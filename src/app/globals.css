@@ -100,3 +100,80 @@ input[type="file"]::file-selector-button:hover {
 .animate-marquee {
   animation: marquee 28s linear infinite;
 }
+
+/*
+  Hero carousel animations.
+  - "pair" slides: two images slide in from the left/right edges and gather in
+    the centre, then (optionally) float gently. The slide-in is on the outer
+    wrapper (translateX) and the float is on the inner element (translateY) so
+    the two transforms never fight each other.
+  - "single" slides: a soft fade-in.
+*/
+@keyframes heroSlideInLeft {
+  from { transform: translateX(-130%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes heroSlideInRight {
+  from { transform: translateX(130%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes heroFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* Continuous per-image motion patterns (applied after the entrance). */
+/*
+  All motions start AND end at the neutral (resting) position so that when the
+  looping animation begins after the entrance (with a start delay) there is no
+  jump/snap into the first keyframe — the rest state and the 0% frame match.
+*/
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes heroSway {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(11px); }
+  70% { transform: translateX(-11px); }
+}
+@keyframes heroPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes heroRock {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(3.5deg); }
+  70% { transform: rotate(-3.5deg); }
+}
+@keyframes heroDrift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(10px, -10px); }
+}
+.hero-slide-in-left {
+  animation: heroSlideInLeft 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-slide-in-right {
+  animation: heroSlideInRight 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-fade-in {
+  animation: heroFadeIn 1s ease-out both;
+}
+/* Duration is overridden per image via inline animation-duration. */
+.hero-motion-float { animation: heroFloat 4s ease-in-out infinite; }
+.hero-motion-sway { animation: heroSway 4s ease-in-out infinite; }
+.hero-motion-pulse { animation: heroPulse 4s ease-in-out infinite; }
+.hero-motion-rock { animation: heroRock 4s ease-in-out infinite; }
+.hero-motion-drift { animation: heroDrift 4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide-in-left,
+  .hero-slide-in-right,
+  .hero-fade-in,
+  .hero-motion-float,
+  .hero-motion-sway,
+  .hero-motion-pulse,
+  .hero-motion-rock,
+  .hero-motion-drift {
+    animation: none !important;
+  }
+}

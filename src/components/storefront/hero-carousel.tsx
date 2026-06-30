@@ -3,17 +3,29 @@
 import { useEffect, useState } from "react";
 import NextImage from "next/image";
 import { Link } from "@/i18n/navigation";
-import { buttonVariants } from "@/components/ui/button";
+import {
+  HERO_PAIR_IMAGE,
+  heroMotionClassName,
+  heroMotionInlineStyle,
+} from "@/lib/site-design";
 import { isRawImage, cn } from "@/lib/utils";
 
 export type HeroSlideView = {
-  eyebrow: string | null;
-  headline: string | null;
-  subtext: string | null;
+  kind: "single" | "pair";
   imageUrl: string | null;
-  ctaLabel: string | null;
-  ctaHref: string | null;
+  imageUrl2: string | null;
+  href: string | null;
+  motion1: string;
+  speed1: number;
+  animated1: boolean;
+  motion2: string;
+  speed2: number;
+  animated2: boolean;
+  bgColor: string | null;
 };
+
+// Motion starts after the entrance (slide-in/fade) finishes.
+const ENTRANCE_DELAY = 0.9;
 
 export function HeroCarousel({ slides }: { slides: HeroSlideView[] }) {
   const [index, setIndex] = useState(0);
@@ -26,89 +38,152 @@ export function HeroCarousel({ slides }: { slides: HeroSlideView[] }) {
   }, [count]);
 
   if (count === 0) return null;
+  const safeIndex = index % count;
+  const active = slides[safeIndex];
 
   return (
     <section className="container-page mt-14 md:mt-16">
-      <div className="relative h-[44vh] min-h-[320px] max-h-[460px] w-full overflow-hidden rounded-2xl bg-sand">
-      {slides.map((slide, i) => {
-        const hasCta = Boolean(slide.ctaLabel && slide.ctaHref);
-        const hasText = Boolean(
-          slide.headline || slide.eyebrow || slide.subtext || hasCta,
-        );
-        return (
-          <div
-            key={i}
-            className={cn(
-              "absolute inset-0 transition-opacity duration-700",
-              i === index ? "opacity-100" : "pointer-events-none opacity-0",
-            )}
-            aria-hidden={i === index ? undefined : true}
-          >
-            {slide.imageUrl && (
-              <NextImage
-                src={slide.imageUrl}
-                alt={slide.headline ?? ""}
-                fill
-                sizes="100vw"
-                className="object-cover"
-                priority={i === 0}
-                unoptimized={isRawImage(slide.imageUrl)}
-              />
-            )}
-            {hasText && (
-              <div className="absolute inset-0 bg-gradient-to-r from-ink/45 via-ink/15 to-transparent" />
-            )}
-            <div className="relative flex h-full flex-col justify-center px-6 sm:px-10 md:px-14">
-              {hasText && (
-                <div className="max-w-xl text-white">
-                  {slide.eyebrow && (
-                    <span className="text-xs font-semibold uppercase tracking-[0.25em]">
-                      {slide.eyebrow}
-                    </span>
-                  )}
-                  {slide.headline && (
-                    <h1 className="mt-2 heading-display text-3xl leading-tight sm:text-4xl lg:text-5xl">
-                      {slide.headline}
-                    </h1>
-                  )}
-                  {slide.subtext && (
-                    <p className="mt-3 max-w-md text-sm sm:text-base">
-                      {slide.subtext}
-                    </p>
-                  )}
-                  {slide.ctaLabel && slide.ctaHref && (
-                    <div className="mt-6">
-                      <Link
-                        href={slide.ctaHref}
-                        className={buttonVariants({ size: "md" })}
-                      >
-                        {slide.ctaLabel}
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-
-      {count > 1 && (
-        <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              aria-label={`Slide ${i + 1}`}
-              onClick={() => setIndex(i)}
-              className={cn(
-                "h-2 rounded-full transition-all",
-                i === index ? "w-8 bg-white" : "w-2 bg-white/50",
-              )}
-            />
-          ))}
-        </div>
-      )}
+      <div
+        className="relative h-[44vh] min-h-[320px] max-h-[460px] w-full overflow-hidden rounded-2xl transition-colors duration-500"
+        style={{ backgroundColor: active.bgColor ?? "transparent" }}
+      >
+        {/* Remount on index change so the entrance animation replays each cycle. */}
+        <Slide key={safeIndex} slide={active} />
       </div>
     </section>
+  );
+}
+
+function Slide({ slide }: { slide: HeroSlideView }) {
+  return slide.kind === "pair" ? (
+    <PairSlide slide={slide} />
+  ) : (
+    <SingleSlide slide={slide} />
+  );
+}
+
+/** One big image with a soft fade-in plus its chosen continuous motion. */
+function SingleSlide({ slide }: { slide: HeroSlideView }) {
+  if (!slide.imageUrl) return null;
+  const inner = (
+    <div
+      className={cn(
+        "absolute inset-0",
+        heroMotionClassName(slide.animated1, slide.motion1),
+      )}
+      style={heroMotionInlineStyle(
+        slide.animated1,
+        slide.motion1,
+        slide.speed1,
+        ENTRANCE_DELAY,
+      )}
+    >
+      <NextImage
+        src={slide.imageUrl}
+        alt=""
+        fill
+        sizes="(max-width: 1280px) 100vw, 1280px"
+        className="object-contain"
+        priority
+        unoptimized={isRawImage(slide.imageUrl)}
+      />
+    </div>
+  );
+  const faded = <div className="absolute inset-0 hero-fade-in">{inner}</div>;
+  return withLink(slide.href, faded, "absolute inset-0 block");
+}
+
+/** Two images that slide in from the edges and gather, side by side, centred. */
+function PairSlide({ slide }: { slide: HeroSlideView }) {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center gap-3 px-4 sm:gap-8 md:gap-12">
+      <EdgeImage
+        src={slide.imageUrl}
+        side="left"
+        href={slide.href}
+        animated={slide.animated1}
+        motion={slide.motion1}
+        speed={slide.speed1}
+      />
+      <EdgeImage
+        src={slide.imageUrl2}
+        side="right"
+        href={slide.href}
+        animated={slide.animated2}
+        motion={slide.motion2}
+        speed={slide.speed2}
+      />
+    </div>
+  );
+}
+
+function EdgeImage({
+  src,
+  side,
+  href,
+  animated,
+  motion,
+  speed,
+}: {
+  src: string | null;
+  side: "left" | "right";
+  href: string | null;
+  animated: boolean;
+  motion: string;
+  speed: number;
+}) {
+  if (!src) return null;
+  const image = (
+    <NextImage
+      src={src}
+      alt=""
+      width={HERO_PAIR_IMAGE.width}
+      height={HERO_PAIR_IMAGE.height}
+      className="h-auto max-h-[15rem] w-auto object-contain sm:max-h-[20rem] md:max-h-[26rem]"
+      priority
+      unoptimized={isRawImage(src)}
+    />
+  );
+  // Continuous motion lives on the inner element; the entrance slide-in
+  // (translateX) on the outer wrapper, so the two transforms never fight.
+  const moved = (
+    <span
+      className={cn("inline-block", heroMotionClassName(animated, motion))}
+      style={heroMotionInlineStyle(animated, motion, speed, ENTRANCE_DELAY)}
+    >
+      {image}
+    </span>
+  );
+  const slid = (
+    <span
+      className={cn(
+        "inline-block",
+        side === "left" ? "hero-slide-in-left" : "hero-slide-in-right",
+      )}
+    >
+      {moved}
+    </span>
+  );
+  return withLink(href, slid, "inline-block");
+}
+
+/** Wrap content in a redirect link (internal locale-aware or external). */
+function withLink(
+  href: string | null,
+  content: React.ReactNode,
+  className: string,
+) {
+  if (!href) return content;
+  if (/^https?:\/\//i.test(href)) {
+    return (
+      <a href={href} className={className}>
+        {content}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className}>
+      {content}
+    </Link>
   );
 }

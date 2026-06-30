@@ -8,17 +8,38 @@ import { Menu, Search, ShoppingBag, User, X, ChevronDown, Heart } from "lucide-r
 import { useCart } from "@/lib/cart-store";
 import { useIsHydrated } from "@/lib/hooks";
 import { pick } from "@/lib/content";
+import {
+  heroMotionClassName,
+  heroMotionInlineStyle,
+} from "@/lib/site-design";
 import { LocaleSwitcher } from "./locale-switcher";
 import { cn } from "@/lib/utils";
 
 type Cat = { slug: string; nameBg: string; nameEn: string };
 type Brand = { line1: string; line2: string };
-type Logo = { url: string; alt: string } | null;
+type Logo = {
+  url: string;
+  alt: string;
+  animated: boolean;
+  motion: string;
+  speed: number;
+  bgColor: string | null;
+} | null;
+type ImageMotion = { animated: boolean; motion: string; speed: number };
 
 function Logotype({ logo, brand }: { logo: Logo; brand: Brand }) {
   if (logo) {
     return (
-      <span className="relative block h-14 w-48 md:h-16 md:w-56">
+      <span
+        className={cn(
+          "relative block h-14 w-48 rounded-xl md:h-16 md:w-56",
+          heroMotionClassName(logo.animated, logo.motion),
+        )}
+        style={{
+          backgroundColor: logo.bgColor ?? "transparent",
+          ...heroMotionInlineStyle(logo.animated, logo.motion, logo.speed),
+        }}
+      >
         <NextImage
           src={logo.url}
           alt={logo.alt || brand.line1}
@@ -39,12 +60,42 @@ function Logotype({ logo, brand }: { logo: Logo; brand: Brand }) {
 
 type BrushStyle = { hue: number; saturate: number; opacity: number };
 
+// Warm-tan base the brush stroke is painted in. The brush image is used only as
+// a mask (its alpha defines the stroke shape), so transparent areas can never
+// show as white. Hue/saturation tune this base via the CMS.
+export const BRUSH_BASE_COLOR = "#c79a5e";
+
+export function brushStyle(
+  brushUrl: string,
+  brush: BrushStyle,
+): React.CSSProperties {
+  return {
+    // The brush PNG is transparent with a painted stroke; using it as a mask
+    // fills ONLY the stroke shape with BRUSH_BASE_COLOR and leaves everything
+    // else transparent. This avoids the previous filter approach which turned
+    // the light stroke nearly white. Hue/saturation adjust the solid fill.
+    WebkitMaskImage: `url(${brushUrl})`,
+    maskImage: `url(${brushUrl})`,
+    WebkitMaskRepeat: "no-repeat",
+    maskRepeat: "no-repeat",
+    WebkitMaskSize: "100% 170px",
+    maskSize: "100% 170px",
+    WebkitMaskPosition: "center bottom",
+    maskPosition: "center bottom",
+    backgroundColor: BRUSH_BASE_COLOR,
+    opacity: brush.opacity / 100,
+    filter: `saturate(${brush.saturate}%) hue-rotate(${brush.hue}deg)`,
+  };
+}
+
 function HeaderBrush({
   brushUrl,
   brush,
+  motion,
 }: {
   brushUrl: string | null;
   brush: BrushStyle;
+  motion: ImageMotion;
 }) {
   if (!brushUrl) return null;
   // Full-width wavy stroke. The band is taller than the header and is NOT
@@ -55,22 +106,13 @@ function HeaderBrush({
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[85px]"
+      className={cn(
+        "pointer-events-none absolute inset-x-0 top-0 z-0 h-[85px]",
+        heroMotionClassName(motion.animated, motion.motion),
+      )}
       style={{
-        backgroundImage: `url(${brushUrl})`,
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "100% 170px",
-        backgroundPosition: "center bottom",
-        opacity: brush.opacity / 100,
-        // multiply drops the image's white background out against the light page
-        // (white * background = background) so an uploaded brush that has a solid
-        // white box still reads as a clean transparent stroke. Only the painted
-        // strokes remain visible.
-        mixBlendMode: "multiply",
-        // grayscale+sepia normalise the stroke to a single tintable base so the
-        // hue/saturation controls can reach any vivid colour (not just shifts of
-        // the original paint colour) while keeping the painted texture.
-        filter: `grayscale(1) sepia(1) saturate(${brush.saturate}%) hue-rotate(${brush.hue}deg)`,
+        ...brushStyle(brushUrl, brush),
+        ...heroMotionInlineStyle(motion.animated, motion.motion, motion.speed),
       }}
     />
   );
@@ -83,6 +125,7 @@ export function Header({
   logo,
   brushUrl = null,
   brush = { hue: 0, saturate: 100, opacity: 75 },
+  brushMotion = { animated: false, motion: "float", speed: 4 },
 }: {
   locale: string;
   categories: Cat[];
@@ -90,6 +133,7 @@ export function Header({
   logo: Logo;
   brushUrl?: string | null;
   brush?: BrushStyle;
+  brushMotion?: ImageMotion;
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
@@ -98,7 +142,7 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-40 bg-background">
-      <HeaderBrush brushUrl={brushUrl} brush={brush} />
+      <HeaderBrush brushUrl={brushUrl} brush={brush} motion={brushMotion} />
       <div className="container-page relative z-10 flex h-20 items-center justify-between gap-6">
         {/* Left: mobile menu + logo */}
         <div className="flex items-center gap-3">

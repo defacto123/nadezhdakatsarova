@@ -1,16 +1,24 @@
 import { prisma } from "@/lib/prisma";
-import { ImageSlotManager } from "@/components/admin/site-design/image-slot-manager";
+import {
+  ImageSlotManager,
+  type ImageRow,
+} from "@/components/admin/site-design/image-slot-manager";
 
 export const dynamic = "force-dynamic";
 
 export default async function ImagesPage() {
   const rows = await prisma.siteImage.findMany();
-  const images: Record<
-    string,
-    { url: string; altBg: string | null; altEn: string | null }
-  > = {};
+  const images: Record<string, ImageRow> = {};
   for (const r of rows) {
-    images[r.slot] = { url: r.url, altBg: r.altBg, altEn: r.altEn };
+    images[r.slot] = {
+      url: r.url,
+      altBg: r.altBg,
+      altEn: r.altEn,
+      animated: r.animated,
+      motion: r.motion,
+      speed: r.speed,
+      bgColor: r.bgColor,
+    };
   }
 
   return (

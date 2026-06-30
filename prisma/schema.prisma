@@ -349,6 +349,12 @@ model SiteImage {
   altEn     String?
   width     Int
   height    Int
+  // Same per-image animation controls as hero slides. Site images default to
+  // not animated (opt-in) so existing decorations don't suddenly move.
+  animated  Boolean  @default(false)
+  motion    String   @default("float") // float|sway|pulse|rock|drift
+  speed     Int      @default(4) // 1 (slow) .. 10 (fast)
+  bgColor   String?  // background behind the image; null = transparent
   updatedAt DateTime @updatedAt
 }
 
@@ -364,13 +370,28 @@ model ContentBlock {
 // Repeatable hero slides shown on the homepage.
 model HeroSlide {
   id         String   @id @default(cuid())
+  // "single" = one big image (fade-in); "pair" = two images that slide in from
+  // the left/right edges and gather in the centre.
+  kind       String   @default("single")
   eyebrowBg  String?
   eyebrowEn  String?
   headlineBg String?
   headlineEn String?
   subtextBg  String?  @db.Text
   subtextEn  String?  @db.Text
-  imageUrl   String?
+  imageUrl   String?  // single image, or the left-edge image of a pair
+  imageUrl2  String?  // right-edge image (pair only)
+  href       String?  // redirect URL; the whole slide image(s) link here
+  // Continuous motion per image. motion1/speed1 = single image or left of a
+  // pair; motion2/speed2 = right of a pair. motion is one of
+  // none|float|sway|pulse|rock|drift; speed is 1 (slow) .. 10 (fast).
+  motion1    String   @default("float")
+  speed1     Int      @default(4)
+  animated1  Boolean  @default(true)
+  motion2    String   @default("float")
+  speed2     Int      @default(4)
+  animated2  Boolean  @default(true)
+  bgColor    String?  // band background colour; null = transparent
   ctaLabelBg String?
   ctaLabelEn String?
   ctaHref    String?

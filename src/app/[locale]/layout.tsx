@@ -76,8 +76,13 @@ export default async function LocaleLayout({
     ? {
         url: logoImage.url,
         alt: pick(locale, logoImage.altBg, logoImage.altEn) || brandLine1,
+        animated: logoImage.animated,
+        motion: logoImage.motion,
+        speed: logoImage.speed,
+        bgColor: logoImage.bgColor,
       }
     : null;
+  const brushImage = images["header-brush"];
 
   return (
     <NextIntlClientProvider>
@@ -92,11 +97,16 @@ export default async function LocaleLayout({
         }))}
         brand={{ line1: brandLine1, line2: brandLine2 }}
         logo={logo}
-        brushUrl={images["header-brush"]?.url ?? "/brand/header-brush.png"}
+        brushUrl={brushImage?.url ?? "/brand/header-brush.png"}
         brush={{
           hue: theme.brushHue,
           saturate: theme.brushSaturate,
           opacity: theme.brushOpacity,
+        }}
+        brushMotion={{
+          animated: brushImage?.animated ?? false,
+          motion: brushImage?.motion ?? "float",
+          speed: brushImage?.speed ?? 4,
         }}
       />
       <main className="flex-1">{children}</main>
