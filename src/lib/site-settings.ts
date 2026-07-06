@@ -74,9 +74,6 @@ const resolvedThemeCached = unstable_cache(
       colorBorder: theme.colorBorder,
       colorSale: theme.colorSale,
       radiusRem: theme.radiusRem,
-      brushHue: theme.brushHue,
-      brushSaturate: theme.brushSaturate,
-      brushOpacity: theme.brushOpacity,
       heroCycleSeconds: theme.heroCycleSeconds,
       bodyFont: theme.bodyFont
         ? {

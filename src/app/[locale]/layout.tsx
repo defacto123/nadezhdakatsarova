@@ -8,7 +8,6 @@ import {
   getContentMap,
   getSiteImages,
   getSocialLinks,
-  getResolvedTheme,
 } from "@/lib/site-settings";
 import { contentValue } from "@/lib/site-design";
 import { pick } from "@/lib/content";
@@ -61,12 +60,11 @@ export default async function LocaleLayout({
   }
   setRequestLocale(locale);
 
-  const [categories, content, images, socials, theme] = await Promise.all([
+  const [categories, content, images, socials] = await Promise.all([
     safeCategories(),
     getContentMap(),
     getSiteImages(),
     getSocialLinks(),
-    getResolvedTheme(),
   ]);
 
   const brandLine1 = contentValue(content, "brand.logoLine1", locale);
@@ -98,11 +96,6 @@ export default async function LocaleLayout({
         brand={{ line1: brandLine1, line2: brandLine2 }}
         logo={logo}
         brushUrl={brushImage?.url ?? "/brand/header-brush.png"}
-        brush={{
-          hue: theme.brushHue,
-          saturate: theme.brushSaturate,
-          opacity: theme.brushOpacity,
-        }}
         brushMotion={{
           animated: brushImage?.animated ?? false,
           motion: brushImage?.motion ?? "float",
