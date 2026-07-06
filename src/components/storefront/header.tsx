@@ -66,26 +66,25 @@ function HeaderBrush({
   motion: ImageMotion;
 }) {
   if (!brushUrl) return null;
-  // Full-width wavy stroke rendered as its original PNG (colours + transparency
-  // preserved). We use background-image rather than CSS mask-image on purpose:
-  // mask-image requires CORS for cross-origin (GCS) uploads and silently hides
-  // the element when the bucket sends no CORS headers, whereas background-image
-  // has no such restriction. The band is taller than the header and is NOT
-  // clipped, so the full ribbon shows and its lower edge spills onto the hero.
+  // Full-width brush rendered as its original PNG (colours + transparency
+  // preserved). Rendered as an <img> with w-full + h-auto so it always keeps
+  // the brush's true proportions (the header-brush slot is fixed at 1600×200):
+  // full width on every screen, height scaling proportionally — never squeezed.
+  // A plain img would also work, but next/image is required by our lint config.
   return (
-    <div
+    <NextImage
+      src={brushUrl}
+      alt=""
       aria-hidden
+      width={1600}
+      height={200}
+      priority
+      unoptimized={brushUrl.startsWith("data:")}
       className={cn(
-        "pointer-events-none absolute inset-x-0 top-0 z-0 h-[85px]",
+        "pointer-events-none absolute inset-x-0 top-0 z-0 h-auto w-full",
         heroMotionClassName(motion.animated, motion.motion),
       )}
-      style={{
-        backgroundImage: `url(${brushUrl})`,
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "100% 170px",
-        backgroundPosition: "center bottom",
-        ...heroMotionInlineStyle(motion.animated, motion.motion, motion.speed),
-      }}
+      style={heroMotionInlineStyle(motion.animated, motion.motion, motion.speed)}
     />
   );
 }
