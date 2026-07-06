@@ -290,9 +290,6 @@ export interface SiteThemeInput {
   colorBorder: string;
   colorSale: string;
   radiusRem: number;
-  brushHue: number;
-  brushSaturate: number;
-  brushOpacity: number;
   bodyFontId: string | null;
   headingFontId: string | null;
 }

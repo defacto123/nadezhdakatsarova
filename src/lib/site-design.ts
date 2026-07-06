@@ -18,12 +18,6 @@ export interface ThemeValues {
   colorBorder: string;
   colorSale: string;
   radiusRem: number;
-  /** Header brush hue rotation in degrees (0-360). */
-  brushHue: number;
-  /** Header brush saturation as a percentage (0-200, 100 = original). */
-  brushSaturate: number;
-  /** Header brush opacity as a percentage (0-100). */
-  brushOpacity: number;
   /** Total seconds for one full loop through all hero slides. */
   heroCycleSeconds: number;
 }
@@ -41,9 +35,6 @@ export const DEFAULT_THEME: ThemeValues = {
   colorBorder: "#ece5db",
   colorSale: "#c4633f",
   radiusRem: 0.6,
-  brushHue: 0,
-  brushSaturate: 100,
-  brushOpacity: 75,
   heroCycleSeconds: 24,
 };
 
@@ -55,7 +46,7 @@ export const HERO_CYCLE = { min: 4, max: 60, default: 24 } as const;
 // fields that don't live on SiteThemeInput (e.g. heroCycleSeconds).
 export type ThemeColorKey = Exclude<
   keyof ThemeValues,
-  "radiusRem" | "brushHue" | "brushSaturate" | "brushOpacity" | "heroCycleSeconds"
+  "radiusRem" | "heroCycleSeconds"
 >;
 
 export interface ThemeColorField {

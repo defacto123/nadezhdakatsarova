@@ -58,51 +58,20 @@ function Logotype({ logo, brand }: { logo: Logo; brand: Brand }) {
   );
 }
 
-type BrushStyle = { hue: number; saturate: number; opacity: number };
-
-// Warm-tan base the brush stroke is painted in. The brush image is used only as
-// a mask (its alpha defines the stroke shape), so transparent areas can never
-// show as white. Hue/saturation tune this base via the CMS.
-export const BRUSH_BASE_COLOR = "#c79a5e";
-
-export function brushStyle(
-  brushUrl: string,
-  brush: BrushStyle,
-): React.CSSProperties {
-  return {
-    // The brush PNG is transparent with a painted stroke; using it as a mask
-    // fills ONLY the stroke shape with BRUSH_BASE_COLOR and leaves everything
-    // else transparent. This avoids the previous filter approach which turned
-    // the light stroke nearly white. Hue/saturation adjust the solid fill.
-    WebkitMaskImage: `url(${brushUrl})`,
-    maskImage: `url(${brushUrl})`,
-    WebkitMaskRepeat: "no-repeat",
-    maskRepeat: "no-repeat",
-    WebkitMaskSize: "100% 170px",
-    maskSize: "100% 170px",
-    WebkitMaskPosition: "center bottom",
-    maskPosition: "center bottom",
-    backgroundColor: BRUSH_BASE_COLOR,
-    opacity: brush.opacity / 100,
-    filter: `saturate(${brush.saturate}%) hue-rotate(${brush.hue}deg)`,
-  };
-}
-
 function HeaderBrush({
   brushUrl,
-  brush,
   motion,
 }: {
   brushUrl: string | null;
-  brush: BrushStyle;
   motion: ImageMotion;
 }) {
   if (!brushUrl) return null;
-  // Full-width wavy stroke. The band is taller than the header and is NOT
-  // clipped, so the complete ribbon — both wavy edges — is visible and its
-  // lower wavy edge spills below the header onto the hero, exactly like the
-  // reference site. Opacity / saturation / hue are CMS-controlled so the menu
-  // text stays readable and the colour can be tuned.
+  // Full-width wavy stroke rendered as its original PNG (colours + transparency
+  // preserved). We use background-image rather than CSS mask-image on purpose:
+  // mask-image requires CORS for cross-origin (GCS) uploads and silently hides
+  // the element when the bucket sends no CORS headers, whereas background-image
+  // has no such restriction. The band is taller than the header and is NOT
+  // clipped, so the full ribbon shows and its lower edge spills onto the hero.
   return (
     <div
       aria-hidden
@@ -111,7 +80,10 @@ function HeaderBrush({
         heroMotionClassName(motion.animated, motion.motion),
       )}
       style={{
-        ...brushStyle(brushUrl, brush),
+        backgroundImage: `url(${brushUrl})`,
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "100% 170px",
+        backgroundPosition: "center bottom",
         ...heroMotionInlineStyle(motion.animated, motion.motion, motion.speed),
       }}
     />
@@ -124,7 +96,6 @@ export function Header({
   brand,
   logo,
   brushUrl = null,
-  brush = { hue: 0, saturate: 100, opacity: 75 },
   brushMotion = { animated: false, motion: "float", speed: 4 },
 }: {
   locale: string;
@@ -132,7 +103,6 @@ export function Header({
   brand: Brand;
   logo: Logo;
   brushUrl?: string | null;
-  brush?: BrushStyle;
   brushMotion?: ImageMotion;
 }) {
   const t = useTranslations("nav");
@@ -142,7 +112,7 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-40 bg-background">
-      <HeaderBrush brushUrl={brushUrl} brush={brush} motion={brushMotion} />
+      <HeaderBrush brushUrl={brushUrl} motion={brushMotion} />
       <div className="container-page relative z-10 flex h-20 items-center justify-between gap-6">
         {/* Left: mobile menu + logo */}
         <div className="flex items-center gap-3">
