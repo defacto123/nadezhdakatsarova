@@ -111,7 +111,7 @@ export function Header({
   const count = useCart((s) => s.items.reduce((a, i) => a + i.quantity, 0));
 
   return (
-    <header className="sticky top-0 z-40 bg-background">
+    <header className="sticky top-0 z-40">
       <HeaderBrush brushUrl={brushUrl} motion={brushMotion} />
       <div className="container-page relative z-10 flex h-20 items-center justify-between gap-6">
         {/* Left: mobile menu + logo */}
