@@ -89,6 +89,37 @@ kill %1 2>/dev/null || true
 Images referenced by these rows are public GCS URLs or inline `data:` URLs, so
 they render locally with no extra steps.
 
+### Also mirror the catalog (categories / products)
+
+To make the storefront show the **same products** as prod (product cards, prices,
+variants, product images) on top of the design, add the four catalog tables to
+the same recipe. FK order is handled by `session_replication_role = replica`,
+which also lets you `TRUNCATE` a table that other tables reference.
+
+```bash
+# (proxy running, PROD_URL / LOCAL_URL set as in steps 1–2 above)
+
+# Dump CMS + catalog tables together (data only).
+pg_dump "$PROD_URL" --data-only --no-owner --no-privileges \
+  --table='public."SiteTheme"'   --table='public."FontAsset"' \
+  --table='public."SiteImage"'   --table='public."HeroSlide"' \
+  --table='public."ContentBlock"' --table='public."SocialLink"' \
+  --table='public."Category"'    --table='public."Product"' \
+  --table='public."ProductVariant"' --table='public."ProductImage"' \
+  > /tmp/cms.sql
+grep -v '^SET transaction_timeout' /tmp/cms.sql > /tmp/cms.filtered.sql
+
+{ printf 'BEGIN;\nSET session_replication_role = replica;\nTRUNCATE "SiteTheme","FontAsset","SiteImage","HeroSlide","ContentBlock","SocialLink","Category","Product","ProductVariant","ProductImage";\n';
+  cat /tmp/cms.filtered.sql;
+  printf '\nCOMMIT;\n'; } | psql "$LOCAL_URL" -v ON_ERROR_STOP=1
+```
+
+> **Caveat — local orders.** `OrderItem`/`Order` are **not** copied (they hold
+> customer data). Because catalog rows are replaced, any existing **local** test
+> orders may end up referencing product IDs that no longer exist. That's harmless
+> for local dev, but if you need order↔product integrity too, use the **Full
+> database** path below instead.
+
 ---
 
 ## Full database (everything: also catalog, orders, users)
