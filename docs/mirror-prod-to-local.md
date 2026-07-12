@@ -48,6 +48,53 @@ along with the DB copy and render locally with no extra steps. Static assets in
 
 ---
 
+## Recommended: CMS design only (themes / images / style)
+
+If you only want the **CMS-managed look** (theme colours, fonts, images, hero
+carousel, editable copy, footer links) and want to leave your local catalog,
+orders, and users alone, copy just these six tables. This is the safest option —
+it never touches customer data. **Verified working.**
+
+```bash
+# 1) Start the proxy on 5433 (see the download snippet in "Quick path" step 1).
+/tmp/cloud-sql-proxy --port 5433 nadezhda-boutique:europe-west3:boutique-db &
+
+# 2) Connection strings (do NOT echo — they contain the password).
+RAW=$(gcloud secrets versions access latest --secret=DATABASE_URL --project nadezhda-boutique)
+CREDS=${RAW#postgresql://}; CREDS=${CREDS%%@*}; NOQ=${RAW%%\?*}; DBNAME=${NOQ##*/}
+PROD_URL="postgresql://${CREDS}@127.0.0.1:5433/${DBNAME}"
+LOCAL_URL="postgresql://postgres:postgres@localhost:5432/boutique"
+
+# 3) Dump the CMS/site-design tables (data only) from prod.
+pg_dump "$PROD_URL" --data-only --no-owner --no-privileges \
+  --table='public."SiteTheme"'  --table='public."FontAsset"' \
+  --table='public."SiteImage"'  --table='public."HeroSlide"' \
+  --table='public."ContentBlock"' --table='public."SocialLink"' \
+  > /tmp/cms.sql
+
+# 4) pg_dump v17+ emits `SET transaction_timeout` which a Postgres 16 server
+#    rejects — strip it (harmless when the server is 17+).
+grep -v '^SET transaction_timeout' /tmp/cms.sql > /tmp/cms.filtered.sql
+
+# 5) Replace the local tables in one transaction. session_replication_role=replica
+#    disables FK/trigger checks so load order doesn't matter.
+{ printf 'BEGIN;\nSET session_replication_role = replica;\nTRUNCATE "SiteTheme","FontAsset","SiteImage","HeroSlide","ContentBlock","SocialLink";\n';
+  cat /tmp/cms.filtered.sql;
+  printf '\nCOMMIT;\n'; } | psql "$LOCAL_URL" -v ON_ERROR_STOP=1
+
+# 6) Refresh the browser (pages are force-dynamic — no rebuild needed). Stop proxy:
+kill %1 2>/dev/null || true
+```
+
+Images referenced by these rows are public GCS URLs or inline `data:` URLs, so
+they render locally with no extra steps.
+
+---
+
+## Full database (everything: also catalog, orders, users)
+
+Use this only when you want a complete replica including customer data.
+
 ## Quick path (copy-paste, ~1 minute)
 
 Run these in order. **Uses proxy port 5433** so it never clashes with your local
