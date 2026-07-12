@@ -109,7 +109,13 @@ pg_dump "$PROD_URL" --data-only --no-owner --no-privileges \
   > /tmp/cms.sql
 grep -v '^SET transaction_timeout' /tmp/cms.sql > /tmp/cms.filtered.sql
 
-{ printf 'BEGIN;\nSET session_replication_role = replica;\nTRUNCATE "SiteTheme","FontAsset","SiteImage","HeroSlide","ContentBlock","SocialLink","Category","Product","ProductVariant","ProductImage";\n';
+{ printf 'BEGIN;\nSET session_replication_role = replica;\n';
+  # CMS tables aren't referenced by anything → TRUNCATE is fine.
+  printf 'TRUNCATE "SiteTheme","FontAsset","SiteImage","HeroSlide","ContentBlock","SocialLink";\n';
+  # Catalog: Product is referenced by OrderItem, so TRUNCATE is blocked even
+  # under replica role. Use DELETE (child → parent order); replica role skips
+  # the FK triggers so OrderItem is left untouched (its productIds may orphan).
+  printf 'DELETE FROM "ProductImage"; DELETE FROM "ProductVariant"; DELETE FROM "Product"; DELETE FROM "Category";\n';
   cat /tmp/cms.filtered.sql;
   printf '\nCOMMIT;\n'; } | psql "$LOCAL_URL" -v ON_ERROR_STOP=1
 ```
