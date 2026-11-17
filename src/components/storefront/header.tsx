@@ -69,7 +69,7 @@ function HeaderBrush({
   // Full-width brush (colours + transparency preserved). On small/medium screens
   // h-auto keeps the true 1600×200 proportions, so the whole stroke shows thin.
   // On large screens the fixed aspect ratio would balloon the height (width grows
-  // → height grows) and overhang the carousel below, so max-h-24 caps it into a
+  // → height grows) and overhang the carousel below, so max-h-[141px] caps it into a
   // constant band. object-cover object-bottom then trims only the flat-colour TOP
   // edge (unrecognisable as a crop) while preserving the brush-stroke design at
   // the bottom.
@@ -83,7 +83,7 @@ function HeaderBrush({
       priority
       unoptimized={brushUrl.startsWith("data:")}
       className={cn(
-        "pointer-events-none absolute inset-x-0 top-0 z-0 h-auto max-h-24 w-full object-cover object-bottom",
+        "pointer-events-none absolute inset-x-0 top-0 z-0 h-auto max-h-[141px] w-full object-cover object-bottom",
         heroMotionClassName(motion.animated, motion.motion),
       )}
       style={heroMotionInlineStyle(motion.animated, motion.motion, motion.speed)}
