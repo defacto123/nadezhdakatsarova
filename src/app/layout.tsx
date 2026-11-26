@@ -56,7 +56,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: themeCss }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col bg-background text-foreground select-none">
         {children}
       </body>
     </html>

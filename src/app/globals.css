@@ -177,3 +177,15 @@ input[type="file"]::file-selector-button:hover {
     animation: none !important;
   }
 }
+
+/*
+ * Text selection is disabled site-wide (body has `select-none`; the admin CMS
+ * re-enables it). Form fields must stay selectable/editable — without this,
+ * Safari inherits user-select:none into inputs and typing breaks.
+ */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}

@@ -8,6 +8,7 @@ _Updated: 2026-11-26_
 
 ## Done
 
+- Text selection disabled on the storefront (`select-none` on body; inputs + admin stay selectable) — PR #26 (open, not merged).
 - CMS fonts preloaded + `font-display:block` (no fallback-font flash on reload); 3 demo boutique images seeded by migration if none exist — PR #25.
 - Boutique decorative images (`BoutiqueImage`, admin section under `/admin/boutique`, spread evenly between products, same motion/bg controls as site images) — PR #24.
 - Removed storefront `loading.tsx` skeleton (grey boxes flashed on reload) — PR #23.
