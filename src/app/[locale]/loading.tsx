@@ -5,7 +5,7 @@
  */
 export default function Loading() {
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-10" aria-busy="true" aria-live="polite">
+    <div className="container-page py-10" aria-busy="true" aria-live="polite">
       <span className="sr-only">Loading…</span>
       <div className="animate-pulse">
         <div className="mb-8 h-8 w-56 rounded-lg bg-black/10" />

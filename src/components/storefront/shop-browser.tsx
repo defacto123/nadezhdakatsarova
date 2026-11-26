@@ -81,7 +81,7 @@ export function ShopBrowser({
   };
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[240px_1fr]">
+    <div className="grid gap-10 lg:grid-cols-[240px_1fr] lg:gap-16">
       {/* Sidebar */}
       <aside className="space-y-8">
         <div>
@@ -172,7 +172,7 @@ export function ShopBrowser({
             {t("noResults")}
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-x-5 gap-y-9 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:gap-x-10">
             {filtered.map((p) => (
               <ProductCard key={p.id} product={p} locale={locale} />
             ))}

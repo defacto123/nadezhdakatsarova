@@ -10,6 +10,7 @@ import {
   getSocialLinks,
 } from "@/lib/site-settings";
 import { contentValue } from "@/lib/site-design";
+import { isBoutiqueMode } from "@/lib/site-mode";
 import { pick } from "@/lib/content";
 import { Header } from "@/components/storefront/header";
 import { Footer } from "@/components/storefront/footer";
@@ -60,8 +61,9 @@ export default async function LocaleLayout({
   }
   setRequestLocale(locale);
 
+  const boutique = isBoutiqueMode();
   const [categories, content, images, socials] = await Promise.all([
-    safeCategories(),
+    boutique ? Promise.resolve([]) : safeCategories(),
     getContentMap(),
     getSiteImages(),
     getSocialLinks(),
@@ -88,6 +90,7 @@ export default async function LocaleLayout({
       <AnnouncementBar text={contentValue(content, "announcement.text", locale)} />
       <Header
         locale={locale}
+        boutique={boutique}
         categories={categories.map((c) => ({
           slug: c.slug,
           nameBg: c.nameBg,
@@ -104,6 +107,7 @@ export default async function LocaleLayout({
       />
       <main className="flex-1">{children}</main>
       <Footer
+        boutique={boutique}
         newsletterTitle={contentValue(content, "newsletter.title", locale)}
         newsletterSubtitle={contentValue(content, "newsletter.subtitle", locale)}
         blurb={contentValue(content, "footer.blurb", locale)}

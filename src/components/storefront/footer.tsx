@@ -7,11 +7,14 @@ import { NewsletterSignup } from "./newsletter-signup";
 type Social = { platform: string; url: string };
 
 export function Footer({
+  boutique = false,
   newsletterTitle,
   newsletterSubtitle,
   blurb,
   socials,
 }: {
+  /** Boutique mode: no separate shop or search pages. */
+  boutique?: boolean;
   newsletterTitle: string;
   newsletterSubtitle: string;
   blurb: string;
@@ -35,7 +38,7 @@ export function Footer({
         </div>
       </div>
 
-      <div className="container-page grid gap-10 py-14 md:grid-cols-4">
+      <div className="container-page grid gap-10 py-16 md:grid-cols-4 lg:gap-16 lg:py-20">
         <div className="md:col-span-2">
           <h4 className="heading-display text-xl">{t("site.name")}</h4>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">{blurb}</p>
@@ -61,16 +64,26 @@ export function Footer({
             {t("footer.shop")}
           </h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>
-              <Link href="/shop" className="hover:text-primary">
-                {t("nav.shop")}
-              </Link>
-            </li>
-            <li>
-              <Link href="/search" className="hover:text-primary">
-                {t("nav.search")}
-              </Link>
-            </li>
+            {boutique ? (
+              <li>
+                <Link href="/" className="hover:text-primary">
+                  {t("boutique.eyebrow")}
+                </Link>
+              </li>
+            ) : (
+              <>
+                <li>
+                  <Link href="/shop" className="hover:text-primary">
+                    {t("nav.shop")}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/search" className="hover:text-primary">
+                    {t("nav.search")}
+                  </Link>
+                </li>
+              </>
+            )}
             <li>
               <Link href="/account" className="hover:text-primary">
                 {t("nav.account")}

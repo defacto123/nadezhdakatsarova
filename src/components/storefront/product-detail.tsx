@@ -153,7 +153,7 @@ export function ProductDetail({
 
   return (
     <>
-    <div className="grid gap-10 lg:grid-cols-2">
+    <div className="grid gap-10 lg:grid-cols-2 lg:gap-16 xl:gap-24">
       {/* Gallery */}
       <div className="flex flex-col gap-4">
         <button

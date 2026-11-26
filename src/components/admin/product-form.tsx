@@ -48,10 +48,18 @@ export interface ProductFormData {
 export function ProductForm({
   categories,
   initial,
+  boutique = false,
 }: {
   categories: CategoryOpt[];
   initial?: ProductFormData;
+  /**
+   * Boutique editor: there is a single catalog, so category and "featured" are
+   * hidden (the page passes the hidden boutique category), new products are
+   * added to the boutique feed, and saving returns to the boutique list.
+   */
+  boutique?: boolean;
 }) {
+  const returnTo = boutique ? "/admin/boutique" : "/admin/products";
   const router = useRouter();
   const [data, setData] = useState<ProductFormData>(
     initial ?? {
@@ -143,8 +151,9 @@ export function ProductForm({
             ? Math.round(parseFloat(v.priceOverrideEuros) * 100)
             : null,
         })),
+        inBoutique: boutique && !data.id,
       });
-      router.push("/admin/products");
+      router.push(returnTo);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -155,7 +164,7 @@ export function ProductForm({
   async function handleDelete() {
     if (!data.id || !confirm("Delete this product?")) return;
     await deleteProduct(data.id);
-    router.push("/admin/products");
+    router.push(returnTo);
     router.refresh();
   }
 
@@ -205,7 +214,7 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className={boutique ? "grid grid-cols-2 gap-4" : "grid grid-cols-3 gap-4"}>
         <div>
           <Label>Price (EUR)</Label>
           <Input
@@ -226,30 +235,34 @@ export function ProductForm({
             onChange={(e) => set("salePercent", e.target.value)}
           />
         </div>
-        <div>
-          <Label>Category</Label>
-          <Select
-            value={data.categoryId}
-            onChange={(e) => set("categoryId", e.target.value)}
-          >
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nameEn}
-              </option>
-            ))}
-          </Select>
-        </div>
+        {!boutique && (
+          <div>
+            <Label>Category</Label>
+            <Select
+              value={data.categoryId}
+              onChange={(e) => set("categoryId", e.target.value)}
+            >
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nameEn}
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-6">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={data.featured}
-            onChange={(e) => set("featured", e.target.checked)}
-          />
-          Featured
-        </label>
+        {!boutique && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={data.featured}
+              onChange={(e) => set("featured", e.target.checked)}
+            />
+            Featured
+          </label>
+        )}
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"

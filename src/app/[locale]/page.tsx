@@ -1,5 +1,7 @@
 import NextImage from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { BoutiqueFeed } from "@/components/storefront/boutique-feed";
+import { isBoutiqueMode } from "@/lib/site-mode";
 import { HeroCarousel, type HeroSlideView } from "@/components/storefront/hero-carousel";
 import { ProductCard } from "@/components/storefront/product-card";
 import { SectionHeading } from "@/components/storefront/section-heading";
@@ -7,6 +9,7 @@ import {
   getNewestProducts,
   getFeaturedProducts,
   getDiscountedProducts,
+  getBoutiqueProducts,
   toCards,
 } from "@/lib/catalog";
 import {
@@ -33,6 +36,11 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
+
+  if (isBoutiqueMode()) {
+    const items = await getBoutiqueProducts();
+    return <BoutiqueFeed items={items} locale={locale} />;
+  }
 
   const [newest, featured, discounted, content, images, heroRows, theme] =
     await Promise.all([
@@ -210,7 +218,7 @@ function SideProductSection({
   ) : null;
 
   const grid = (
-    <div className="grid grid-cols-2 gap-x-5 gap-y-9 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-3 lg:gap-x-10">
       {products.map((p) => (
         <ProductCard key={p.id} product={p} locale={locale} />
       ))}
@@ -218,7 +226,7 @@ function SideProductSection({
   );
 
   return (
-    <section className="container-page mt-20">
+    <section className="container-page mt-20 lg:mt-28">
       <SectionHeading
         title={title}
         subtitle={subtitle}
@@ -232,7 +240,7 @@ function SideProductSection({
       )}
       <div
         className={cn(
-          "grid items-center gap-8 lg:gap-12",
+          "grid items-center gap-8 lg:gap-16",
           side &&
             (sidePosition === "left"
               ? "lg:grid-cols-[280px_minmax(0,1fr)]"

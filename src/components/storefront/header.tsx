@@ -93,6 +93,7 @@ function HeaderBrush({
 
 export function Header({
   locale,
+  boutique = false,
   categories,
   brand,
   logo,
@@ -100,6 +101,8 @@ export function Header({
   brushMotion = { animated: false, motion: "float", speed: 4 },
 }: {
   locale: string;
+  /** Boutique mode: single catalog, so no shop menu, categories, sale or search. */
+  boutique?: boolean;
   categories: Cat[];
   brand: Brand;
   logo: Logo;
@@ -134,32 +137,36 @@ export function Header({
           <Link href="/" className="hover:text-primary">
             {t("home")}
           </Link>
-          <div className="group relative">
-            <button className="inline-flex items-center gap-1 hover:text-primary">
-              {t("shop")}
-              <ChevronDown className="h-3.5 w-3.5" />
-            </button>
-            <div className="invisible absolute left-1/2 z-50 mt-3 w-56 -translate-x-1/2 rounded-2xl border border-border bg-white p-2 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100">
-              <Link
-                href="/shop"
-                className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-muted"
-              >
-                {t("allProducts")}
-              </Link>
-              {categories.map((c) => (
+          {!boutique && (
+            <div className="group relative">
+              <button className="inline-flex items-center gap-1 hover:text-primary">
+                {t("shop")}
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+              <div className="invisible absolute left-1/2 z-50 mt-3 w-56 -translate-x-1/2 rounded-2xl border border-border bg-white p-2 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100">
                 <Link
-                  key={c.slug}
-                  href={`/category/${c.slug}`}
-                  className="block rounded-xl px-3 py-2 text-sm hover:bg-muted"
+                  href="/shop"
+                  className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-muted"
                 >
-                  {pick(locale, c.nameBg, c.nameEn)}
+                  {t("allProducts")}
                 </Link>
-              ))}
+                {categories.map((c) => (
+                  <Link
+                    key={c.slug}
+                    href={`/category/${c.slug}`}
+                    className="block rounded-xl px-3 py-2 text-sm hover:bg-muted"
+                  >
+                    {pick(locale, c.nameBg, c.nameEn)}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-          <Link href="/shop" className="font-medium text-[var(--color-sale)]">
-            {t("sale")}
-          </Link>
+          )}
+          {!boutique && (
+            <Link href="/shop" className="font-medium text-[var(--color-sale)]">
+              {t("sale")}
+            </Link>
+          )}
           <a href="#newsletter" className="hover:text-primary">
             {t("newsletter")}
           </a>
@@ -177,9 +184,11 @@ export function Header({
           <Link href="/account" aria-label="Wishlist" className="hidden sm:block">
             <Heart className="h-5 w-5 hover:text-primary" />
           </Link>
-          <Link href="/search" aria-label={t("search")}>
-            <Search className="h-5 w-5 hover:text-primary" />
-          </Link>
+          {!boutique && (
+            <Link href="/search" aria-label={t("search")}>
+              <Search className="h-5 w-5 hover:text-primary" />
+            </Link>
+          )}
           <Link href="/account" aria-label={t("account")}>
             <User className="h-5 w-5 hover:text-primary" />
           </Link>
@@ -221,29 +230,33 @@ export function Header({
             <Link href="/" onClick={() => setOpen(false)} className="py-2">
               {t("home")}
             </Link>
-            <Link href="/shop" onClick={() => setOpen(false)} className="py-2">
-              {t("shop")}
-            </Link>
-            <div className="py-2 text-xs uppercase tracking-wide text-muted-foreground">
-              {t("catalogs")}
-            </div>
-            {categories.map((c) => (
-              <Link
-                key={c.slug}
-                href={`/category/${c.slug}`}
-                onClick={() => setOpen(false)}
-                className="py-2 pl-3"
-              >
-                {pick(locale, c.nameBg, c.nameEn)}
-              </Link>
-            ))}
-            <Link
-              href="/shop"
-              onClick={() => setOpen(false)}
-              className="py-2 font-medium text-[var(--color-sale)]"
-            >
-              {t("sale")}
-            </Link>
+            {!boutique && (
+              <>
+                <Link href="/shop" onClick={() => setOpen(false)} className="py-2">
+                  {t("shop")}
+                </Link>
+                <div className="py-2 text-xs uppercase tracking-wide text-muted-foreground">
+                  {t("catalogs")}
+                </div>
+                {categories.map((c) => (
+                  <Link
+                    key={c.slug}
+                    href={`/category/${c.slug}`}
+                    onClick={() => setOpen(false)}
+                    className="py-2 pl-3"
+                  >
+                    {pick(locale, c.nameBg, c.nameEn)}
+                  </Link>
+                ))}
+                <Link
+                  href="/shop"
+                  onClick={() => setOpen(false)}
+                  className="py-2 font-medium text-[var(--color-sale)]"
+                >
+                  {t("sale")}
+                </Link>
+              </>
+            )}
             <Link href="/about" onClick={() => setOpen(false)} className="py-2">
               {t("about")}
             </Link>
