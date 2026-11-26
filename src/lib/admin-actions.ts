@@ -37,6 +37,8 @@ export interface ProductInput {
   categoryId: string;
   images: { url: string; alt: string | null }[];
   variants: VariantInput[];
+  /** Only used on create: add the new product straight into the boutique feed. */
+  inBoutique?: boolean;
 }
 
 export async function saveProduct(input: ProductInput) {
@@ -62,7 +64,11 @@ export async function saveProduct(input: ProductInput) {
     await prisma.productImage.deleteMany({ where: { productId } });
     await prisma.productVariant.deleteMany({ where: { productId } });
   } else {
-    const created = await prisma.product.create({ data });
+    const created = await prisma.product.create({
+      data: input.inBoutique
+        ? { ...data, inBoutique: true, boutiqueSortOrder: await topBoutiqueSortOrder() }
+        : data,
+    });
     productId = created.id;
   }
 
@@ -91,6 +97,8 @@ export async function saveProduct(input: ProductInput) {
   }
 
   revalidatePath("/admin/products");
+  revalidatePath("/admin/boutique");
+  revalidatePath("/", "layout");
   return { id: productId };
 }
 
@@ -98,6 +106,68 @@ export async function deleteProduct(id: string) {
   await assertAdmin();
   await prisma.product.delete({ where: { id } });
   revalidatePath("/admin/products");
+}
+
+// ---------------------------------------------------------------------------
+// Boutique (single curated catalog, see SITE_MODE in src/lib/site-mode.ts)
+// ---------------------------------------------------------------------------
+
+/** Sort value that puts an item at the top of the feed (feed sorts ascending). */
+async function topBoutiqueSortOrder(): Promise<number> {
+  const first = await prisma.product.findFirst({
+    where: { inBoutique: true },
+    orderBy: { boutiqueSortOrder: "asc" },
+    select: { boutiqueSortOrder: true },
+  });
+  return first ? first.boutiqueSortOrder - 1 : 0;
+}
+
+function revalidateBoutique() {
+  revalidatePath("/admin/boutique");
+  revalidatePath("/admin/products");
+  revalidatePath("/", "layout");
+}
+
+export async function addToBoutique(productId: string) {
+  await assertAdmin();
+  await prisma.product.update({
+    where: { id: productId },
+    data: { inBoutique: true, boutiqueSortOrder: await topBoutiqueSortOrder() },
+  });
+  revalidateBoutique();
+}
+
+export async function removeFromBoutique(productId: string) {
+  await assertAdmin();
+  await prisma.product.update({
+    where: { id: productId },
+    data: { inBoutique: false },
+  });
+  revalidateBoutique();
+}
+
+/** Move an item one place up or down in the boutique feed. */
+export async function moveBoutiqueItem(productId: string, direction: "up" | "down") {
+  await assertAdmin();
+  const items = await prisma.product.findMany({
+    where: { inBoutique: true },
+    orderBy: [{ boutiqueSortOrder: "asc" }, { createdAt: "desc" }],
+    select: { id: true },
+  });
+  const idx = items.findIndex((i) => i.id === productId);
+  const target = direction === "up" ? idx - 1 : idx + 1;
+  if (idx < 0 || target < 0 || target >= items.length) return;
+  [items[idx], items[target]] = [items[target], items[idx]];
+  // Rewrite a dense 0..n-1 order so ties from older data can't stick.
+  await prisma.$transaction(
+    items.map((item, i) =>
+      prisma.product.update({
+        where: { id: item.id },
+        data: { boutiqueSortOrder: i },
+      }),
+    ),
+  );
+  revalidateBoutique();
 }
 
 export interface CategoryInput {

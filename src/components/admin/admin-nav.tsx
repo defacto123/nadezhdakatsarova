@@ -18,6 +18,7 @@ import {
   FileText,
   GalleryHorizontalEnd,
   Share2,
+  Gem,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ type NavItem = {
 
 const links: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/boutique", label: "Boutique", icon: Gem },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/discounts", label: "Discounts", icon: Tag },

@@ -1,3 +1,5 @@
+import { redirect } from "@/i18n/navigation";
+import { isBoutiqueMode } from "@/lib/site-mode";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { searchProducts, toCards } from "@/lib/catalog";
@@ -15,6 +17,8 @@ export default async function SearchPage({
   const { locale } = await params;
   const { q } = await searchParams;
   setRequestLocale(locale);
+  // Boutique mode has a single catalog on the home page — no shop/filters/search.
+  if (isBoutiqueMode()) redirect({ href: "/", locale });
   const t = await getTranslations("nav");
 
   const results = q ? await searchProducts(q) : [];

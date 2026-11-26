@@ -7,7 +7,13 @@ import {
 } from "@/components/storefront/product-detail";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { SectionHeading } from "@/components/storefront/section-heading";
-import { getProductBySlug, getRelatedProducts, toCards } from "@/lib/catalog";
+import {
+  getProductBySlug,
+  getRelatedProducts,
+  getOtherBoutiqueProducts,
+  toCards,
+} from "@/lib/catalog";
+import { isBoutiqueMode } from "@/lib/site-mode";
 import { pick } from "@/lib/content";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +25,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) return {};
+  if (!product || (isBoutiqueMode() && !product.inBoutique)) return {};
   const title = pick(locale, product.titleBg, product.titleEn);
   const description = pick(locale, product.descriptionBg, product.descriptionEn);
   return {
@@ -41,10 +47,15 @@ export default async function ProductPage({
   setRequestLocale(locale);
   const t = await getTranslations("product");
 
+  const boutique = isBoutiqueMode();
   const product = await getProductBySlug(slug);
-  if (!product) notFound();
+  // In boutique mode only curated boutique items are reachable.
+  if (!product || (boutique && !product.inBoutique)) notFound();
 
-  const related = await getRelatedProducts(product.categoryId, product.id, 4);
+  const related = boutique
+    ? await getOtherBoutiqueProducts(product.id, 3)
+    : await getRelatedProducts(product.categoryId, product.id, 4);
+  const tb = await getTranslations("boutique");
 
   const detail: DetailProduct = {
     id: product.id,
@@ -90,7 +101,7 @@ export default async function ProductPage({
   };
 
   return (
-    <div className="container-page py-10">
+    <div className="container-page py-10 lg:py-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -98,8 +109,8 @@ export default async function ProductPage({
       <ProductDetail product={detail} locale={locale} />
 
       {related.length > 0 && (
-        <section className="mt-20">
-          <SectionHeading title={t("relatedProducts")} />
+        <section className="mt-20 lg:mt-28">
+          <SectionHeading title={boutique ? tb("more") : t("relatedProducts")} />
           <ProductGrid products={toCards(related)} locale={locale} />
         </section>
       )}

@@ -172,3 +172,36 @@ export async function getRelatedProducts(
     take,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Boutique mode (single curated catalog)
+// ---------------------------------------------------------------------------
+
+const boutiqueWhere: Prisma.ProductWhereInput = { ...baseWhere, inBoutique: true };
+const boutiqueOrder: Prisma.ProductOrderByWithRelationInput[] = [
+  { boutiqueSortOrder: "asc" },
+  { createdAt: "desc" },
+];
+
+/** Every visible boutique item, in the order set in the CMS. */
+export async function getBoutiqueProducts() {
+  return prisma.product.findMany({
+    where: boutiqueWhere,
+    include: {
+      images: { orderBy: { sortOrder: "asc" } },
+      variants: true,
+      category: true,
+    },
+    orderBy: boutiqueOrder,
+  });
+}
+
+/** Other boutique items to show under a product page. */
+export async function getOtherBoutiqueProducts(excludeId: string, take = 3) {
+  return prisma.product.findMany({
+    where: { ...boutiqueWhere, id: { not: excludeId } },
+    include: productCardInclude,
+    orderBy: boutiqueOrder,
+    take,
+  });
+}

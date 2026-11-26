@@ -163,5 +163,15 @@
     "message": "We use cookies and analytics to improve your experience.",
     "accept": "Accept",
     "decline": "Decline"
+  },
+  "boutique": {
+    "eyebrow": "Boutique",
+    "title": "Things made by hand",
+    "subtitle": "Every piece is one of a kind. I add them here one at a time — once one finds its home, it's gone.",
+    "view": "View piece",
+    "more": "More from the boutique",
+    "empty": "New pieces are coming soon.",
+    "soldOut": "Sold",
+    "fromPrice": "from"
   }
 }

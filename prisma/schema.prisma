@@ -110,6 +110,10 @@ model Product {
   isNew         Boolean          @default(false)
   active        Boolean          @default(true)
   soldCount     Int              @default(0)
+  // Boutique mode (SITE_MODE=boutique): only products with inBoutique=true are
+  // shown, as a single blog-like feed ordered by boutiqueSortOrder.
+  inBoutique        Boolean      @default(false)
+  boutiqueSortOrder Int          @default(0)
   categoryId    String
   category      Category         @relation(fields: [categoryId], references: [id])
   images        ProductImage[]
@@ -119,6 +123,7 @@ model Product {
   updatedAt     DateTime         @updatedAt
 
   @@index([categoryId])
+  @@index([inBoutique, boutiqueSortOrder])
 }
 
 model ProductImage {
