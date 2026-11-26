@@ -2,12 +2,13 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { buttonVariants } from "@/components/ui/button";
 import { BoutiqueManager } from "@/components/admin/boutique-manager";
+import { BoutiqueImageManager } from "@/components/admin/boutique-image-manager";
 import { isBoutiqueMode } from "@/lib/site-mode";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminBoutiquePage() {
-  const [items, others] = await Promise.all([
+  const [items, others, images] = await Promise.all([
     prisma.product.findMany({
       where: { inBoutique: true },
       orderBy: [{ boutiqueSortOrder: "asc" }, { createdAt: "desc" }],
@@ -17,6 +18,9 @@ export default async function AdminBoutiquePage() {
       where: { inBoutique: false },
       orderBy: { titleEn: "asc" },
       select: { id: true, titleEn: true },
+    }),
+    prisma.boutiqueImage.findMany({
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
   ]);
 
@@ -51,6 +55,23 @@ export default async function AdminBoutiquePage() {
               : p.variants.reduce((s, v) => s + v.stock, 0),
         }))}
         others={others}
+      />
+
+      <BoutiqueImageManager
+        productCount={items.filter((p) => p.active).length}
+        images={images.map((i) => ({
+          id: i.id,
+          url: i.url,
+          altBg: i.altBg,
+          altEn: i.altEn,
+          animated: i.animated,
+          motion: i.motion,
+          speed: i.speed,
+          bgColor: i.bgColor,
+          position:
+            i.position === "left" || i.position === "right" ? i.position : "center",
+          active: i.active,
+        }))}
       />
     </div>
   );

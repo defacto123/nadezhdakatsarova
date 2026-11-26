@@ -170,6 +170,70 @@ export async function moveBoutiqueItem(productId: string, direction: "up" | "dow
   revalidateBoutique();
 }
 
+// Decorative boutique images (spread evenly between boutique products).
+
+export interface BoutiqueImageInput {
+  id?: string;
+  url: string;
+  altBg: string | null;
+  altEn: string | null;
+  animated: boolean;
+  motion: string;
+  speed: number;
+  bgColor: string | null;
+  position: "left" | "center" | "right";
+  active: boolean;
+}
+
+export async function saveBoutiqueImage(input: BoutiqueImageInput) {
+  await assertAdmin();
+  const { id, ...rest } = input;
+  const data = {
+    ...rest,
+    position: ["left", "center", "right"].includes(rest.position)
+      ? rest.position
+      : "center",
+    speed: Math.min(10, Math.max(1, Math.round(rest.speed))),
+  };
+  if (id) {
+    await prisma.boutiqueImage.update({ where: { id }, data });
+  } else {
+    const last = await prisma.boutiqueImage.findFirst({
+      orderBy: { sortOrder: "desc" },
+      select: { sortOrder: true },
+    });
+    await prisma.boutiqueImage.create({
+      data: { ...data, sortOrder: (last?.sortOrder ?? -1) + 1 },
+    });
+  }
+  revalidateBoutique();
+}
+
+export async function deleteBoutiqueImage(id: string) {
+  await assertAdmin();
+  await prisma.boutiqueImage.delete({ where: { id } });
+  revalidateBoutique();
+}
+
+/** Move a boutique image one place up or down. */
+export async function moveBoutiqueImage(id: string, direction: "up" | "down") {
+  await assertAdmin();
+  const items = await prisma.boutiqueImage.findMany({
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    select: { id: true },
+  });
+  const idx = items.findIndex((i) => i.id === id);
+  const target = direction === "up" ? idx - 1 : idx + 1;
+  if (idx < 0 || target < 0 || target >= items.length) return;
+  [items[idx], items[target]] = [items[target], items[idx]];
+  await prisma.$transaction(
+    items.map((item, i) =>
+      prisma.boutiqueImage.update({ where: { id: item.id }, data: { sortOrder: i } }),
+    ),
+  );
+  revalidateBoutique();
+}
+
 export interface CategoryInput {
   id?: string;
   slug: string;

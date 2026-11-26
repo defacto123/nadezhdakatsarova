@@ -8,6 +8,7 @@ _Updated: 2026-11-26_
 
 ## Done
 
+- Boutique decorative images (`BoutiqueImage`, admin section under `/admin/boutique`, spread evenly between products, same motion/bg controls as site images) — PR #24.
 - Removed storefront `loading.tsx` skeleton (grey boxes flashed on reload) — PR #23.
 - Deploy passes repo variable `SITE_MODE` to Cloud Run (default `classic`) — PR #22.
 - Header brush cap 96px → 141px — PR #20.
@@ -23,6 +24,7 @@ _Updated: 2026-11-26_
 - Boutique items are normal `Product` rows flagged `inBoutique` — cart, checkout, orders, stock work unchanged.
 - Items created from the Boutique screen go to a hidden inactive category `boutique` (`categoryId` is required).
 - No route-level `loading.tsx` on the storefront: pages appear fully rendered, redirects/404s are real HTTP codes. If navigation feels unresponsive, add a thin top progress bar, not a skeleton.
+- Boutique images: image k goes after product round((k+1)·N/(M+1)) (`placeDecorations` in `boutique-feed.tsx`); size 700×900 recommended, not enforced.
 - In boutique mode `/shop`, `/category/*`, `/search` redirect to `/`; non-boutique products 404.
 
 ## Traps
