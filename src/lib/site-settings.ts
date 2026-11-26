@@ -203,7 +203,36 @@ export const getSocialLinks = cache(async () => {
 
 const safeFamily = (s: string) => s.replace(/['"\\]/g, "").trim();
 
-/** Build the runtime CSS (font-faces + :root variables) for a resolved theme. */
+const FONT_MIME: Record<string, string> = {
+  woff2: "font/woff2",
+  woff: "font/woff",
+  truetype: "font/ttf",
+  opentype: "font/otf",
+};
+
+/**
+ * Uploaded CMS fonts to <link rel="preload"> in the document head, so the
+ * browser fetches them immediately instead of after parsing the theme CSS.
+ * Together with font-display:block this avoids a flash of the fallback font.
+ */
+export function themeFontPreloads(
+  theme: ResolvedTheme,
+): { href: string; type: string }[] {
+  const fonts = [theme.bodyFont, theme.headingFont].filter(
+    (f): f is ActiveFont => f !== null,
+  );
+  const unique = Array.from(new Map(fonts.map((f) => [f.id, f])).values());
+  return unique.map((f) => ({
+    href: `/api/fonts/${f.id}`,
+    type: FONT_MIME[f.format] ?? "font/woff2",
+  }));
+}
+
+/**
+ * Build the runtime CSS (font-faces + :root variables) for a resolved theme.
+ * Uploaded fonts use font-display:block (short invisible period, no swap from
+ * a fallback font) — they are preloaded, so the block period is brief.
+ */
 export function buildThemeCss(theme: ResolvedTheme): string {
   const parts: string[] = [];
   const rootVars: string[] = [themeCssVars(theme)];
@@ -211,7 +240,7 @@ export function buildThemeCss(theme: ResolvedTheme): string {
   if (theme.bodyFont) {
     const fam = safeFamily(theme.bodyFont.family);
     parts.push(
-      `@font-face{font-family:'${fam}';src:url('/api/fonts/${theme.bodyFont.id}') format('${theme.bodyFont.format}');font-display:swap;}`,
+      `@font-face{font-family:'${fam}';src:url('/api/fonts/${theme.bodyFont.id}') format('${theme.bodyFont.format}');font-display:block;}`,
     );
     rootVars.push(
       `--font-sans: '${fam}', var(--font-inter), system-ui, sans-serif;`,
@@ -220,7 +249,7 @@ export function buildThemeCss(theme: ResolvedTheme): string {
   if (theme.headingFont) {
     const fam = safeFamily(theme.headingFont.family);
     parts.push(
-      `@font-face{font-family:'${fam}';src:url('/api/fonts/${theme.headingFont.id}') format('${theme.headingFont.format}');font-display:swap;}`,
+      `@font-face{font-family:'${fam}';src:url('/api/fonts/${theme.headingFont.id}') format('${theme.headingFont.format}');font-display:block;}`,
     );
     rootVars.push(
       `--font-display: '${fam}', var(--font-fraunces), Georgia, serif;`,

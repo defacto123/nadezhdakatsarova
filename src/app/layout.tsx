@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import { preload } from "react-dom";
 import { getLocale } from "next-intl/server";
-import { getResolvedTheme, buildThemeCss } from "@/lib/site-settings";
+import {
+  getResolvedTheme,
+  buildThemeCss,
+  themeFontPreloads,
+} from "@/lib/site-settings";
 import "./globals.css";
 
 const inter = Inter({
@@ -34,6 +39,10 @@ export default async function RootLayout({
   const locale = await getLocale();
   const theme = await getResolvedTheme();
   const themeCss = buildThemeCss(theme);
+  // Fetch uploaded CMS fonts right away (React hoists these into <head>).
+  for (const f of themeFontPreloads(theme)) {
+    preload(f.href, { as: "font", type: f.type, crossOrigin: "anonymous" });
+  }
   return (
     <html
       lang={locale}
