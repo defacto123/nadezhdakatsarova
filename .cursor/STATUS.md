@@ -4,17 +4,18 @@ _Updated: 2026-11-26_
 
 ## Now
 
-- Boutique mode is merged but OFF in prod (no `SITE_MODE` there). Classic shop is live.
-- PR #20 (header brush cap 96px → 141px) open, awaiting approval.
+- Boutique mode is live-capable but OFF in prod (repo variable `SITE_MODE` unset → `classic`). Classic shop is live.
 
 ## Done
 
+- Deploy passes repo variable `SITE_MODE` to Cloud Run (default `classic`) — PR #22.
+- Header brush cap 96px → 141px — PR #20.
 - Boutique mode: `SITE_MODE=boutique` switch, blog-like single-catalog feed, admin `/admin/boutique` (add/remove/reorder), `Product.inBoutique` + `boutiqueSortOrder`; wider site container (1600px) and more spacing — PR #21.
 - Header brush height fixes — PR #16, #18.
 
 ## Next
 
-- To turn boutique on in prod: add `SITE_MODE=${{ vars.SITE_MODE }}` to `--set-env-vars` in `.github/workflows/deploy.yml`, set repo variable `SITE_MODE=boutique`, redeploy.
+- To turn boutique on in prod: set repo variable `SITE_MODE=boutique` (`gh variable set SITE_MODE --body boutique`), then run "Deploy to Cloud Run" manually. Off: delete the variable and re-run.
 - Fill the boutique with real items in the CMS (demo seed `prisma/seed-boutique.ts` is local-only).
 
 ## Decisions
@@ -25,6 +26,6 @@ _Updated: 2026-11-26_
 
 ## Traps
 
-- `deploy.yml` uses `--set-env-vars`, which REPLACES all Cloud Run env vars on every deploy — env set by hand in Cloud Run is lost. Add new env vars to the workflow.
+- `deploy.yml` uses `--set-env-vars`, which REPLACES all Cloud Run env vars on every deploy — env set by hand in Cloud Run is lost. Add new env vars to the workflow (as `SITE_MODE` is).
 - Local DB: `boutique-db` container conflicts on :5432 with another project; a copy runs as `boutique-db-5433` on :5433 (override `DATABASE_URL` when starting dev). Local DB was made with `db push`, so use `prisma db push` there, not `migrate deploy`.
 - After `globals.css` changes the Turbopack dev cache can serve stale CSS — `rm -rf .next` and restart.
