@@ -10,6 +10,7 @@ import {
   getFeaturedProducts,
   getDiscountedProducts,
   getBoutiqueProducts,
+  getBoutiqueImages,
   toCards,
 } from "@/lib/catalog";
 import {
@@ -38,8 +39,13 @@ export default async function HomePage({
   const t = await getTranslations();
 
   if (isBoutiqueMode()) {
-    const items = await getBoutiqueProducts();
-    return <BoutiqueFeed items={items} locale={locale} />;
+    const [items, decorations] = await Promise.all([
+      getBoutiqueProducts(),
+      getBoutiqueImages(),
+    ]);
+    return (
+      <BoutiqueFeed items={items} decorations={decorations} locale={locale} />
+    );
   }
 
   const [newest, featured, discounted, content, images, heroRows, theme] =

@@ -205,3 +205,11 @@ export async function getOtherBoutiqueProducts(excludeId: string, take = 3) {
     take,
   });
 }
+
+/** Visible decorative images for the boutique feed, in CMS order. */
+export async function getBoutiqueImages() {
+  return prisma.boutiqueImage.findMany({
+    where: { active: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+  });
+}

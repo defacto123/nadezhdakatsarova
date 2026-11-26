@@ -414,3 +414,21 @@ model SocialLink {
   sortOrder Int     @default(0)
   active    Boolean @default(true)
 }
+
+// Decorative images interleaved with the boutique feed (SITE_MODE=boutique).
+// Spread evenly between the products; same motion controls as site images.
+model BoutiqueImage {
+  id        String   @id @default(cuid())
+  url       String
+  altBg     String?
+  altEn     String?
+  animated  Boolean  @default(false)
+  motion    String   @default("float") // float|sway|pulse|rock|drift
+  speed     Int      @default(4) // 1 (slow) .. 10 (fast)
+  bgColor   String?  // background behind the image; null = transparent
+  position  String   @default("center") // left|center|right
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
