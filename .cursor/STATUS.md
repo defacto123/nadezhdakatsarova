@@ -8,6 +8,7 @@ _Updated: 2026-11-26_
 
 ## Done
 
+- CMS fonts preloaded + `font-display:block` (no fallback-font flash on reload); 3 demo boutique images seeded by migration if none exist — PR #25.
 - Boutique decorative images (`BoutiqueImage`, admin section under `/admin/boutique`, spread evenly between products, same motion/bg controls as site images) — PR #24.
 - Removed storefront `loading.tsx` skeleton (grey boxes flashed on reload) — PR #23.
 - Deploy passes repo variable `SITE_MODE` to Cloud Run (default `classic`) — PR #22.
@@ -31,4 +32,5 @@ _Updated: 2026-11-26_
 
 - `deploy.yml` uses `--set-env-vars`, which REPLACES all Cloud Run env vars on every deploy — env set by hand in Cloud Run is lost. Add new env vars to the workflow (as `SITE_MODE` is).
 - Local DB: `boutique-db` container conflicts on :5432 with another project; a copy runs as `boutique-db-5433` on :5433 (override `DATABASE_URL` when starting dev). Local DB was made with `db push`, so use `prisma db push` there, not `migrate deploy`.
+- Uploaded CMS fonts must stay preloaded (`themeFontPreloads` + `preload()` in root layout) with `font-display:block`; `swap` makes text flash in Inter/Fraunces first.
 - After `globals.css` changes the Turbopack dev cache can serve stale CSS — `rm -rf .next` and restart.
